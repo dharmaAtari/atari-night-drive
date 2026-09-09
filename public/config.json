@@ -87,7 +87,7 @@
   },
   "audio": {},
   "debug": {
-    "autoCentre": false,
+    "autoCentre": true,
     "showSeed": true
   }
 }

@@ -15,7 +15,9 @@ game logic runs under Vitest without a browser. Phaser touches the world only at
 | G0.1 | How is a curve failable with discrete lanes? | **Curvature applies continuous outward drift ∝ `curvature × speed`. Lanes are attractors; car `x` is continuous. An attached rope cancels drift.** | §5 rewords to "the car *rests* in a lane"; off-road = `|x| > roadHalfWidth`. |
 | G0.2 | Does headlight power tighten the throw window? | **Yes. Anchor glow radius scales with power, floored at the reaction-window distance for the current speed.** | Rule 4.3.4 holds by construction; §8.4 stays true. |
 | G0.3 | Difficulty after the speed cap? | **Hazard density and combination rate ramp on the same curve as speed, cap together, then hold.** | Late game is sustained execution; runs bounded by attention, not a wall. |
-| G0.4 | Multiple simultaneous anchors? | **Up to 2 on screen. Selection = nearest ahead of the car. Pickups are the second anchor on the same safe side.** | §8.3's choice is *temporal*: throw early for the pickup, late for the safe post. |
+| G0.4 | Multiple simultaneous anchors? | **Up to 2 on screen. Selection = nearest ahead of the car. Pickups are the second anchor on the same safe side.** | §8.3's choice is *temporal*. With nearest-ahead selection, the pickup anchor is placed **nearer** than the safe post on the same safe side, so an early throw takes the pickup and a later throw takes the safe post. Both anchors carry their own `windowCloseS`; a pickup whose window would close before it opens is never emitted. |
+
+Amended 2026-09-09 after architect review: the original wording placed the pickup further out, which inverts the choice under nearest-ahead selection.
 
 ---
 
@@ -46,18 +48,21 @@ pass its exit gate.
 | iOS | Safari and WKWebView, two most recent iOS majors | Audio requires a user gesture; `100vh` is unreliable — use `visualViewport` |
 | Android | Chrome and Android WebView, two most recent majors | Low-end reference: Qualcomm 215-class, 2 GB RAM, must hold ≥ 30 fps |
 | Embed | iframe on a third-party page (MSN/Arkadium path) | No top-level navigation, no orientation lock, no `localStorage` assumption |
-| Renderer | WebGL, **Canvas fallback via `Phaser.AUTO`** | Verified in Phaser 4.2.1 types: "If not, it will fall back to the Canvas Renderer" |
+| Renderer | WebGL, **Canvas fallback via `Phaser.AUTO`** | Verified in Phaser 4.2.1 types: "If not, it will fall back to the Canvas Renderer" Canvas is a *boots-and-is-playable* tier only: Phase 6 lighting uses Filters, which are WebGL-only, so the verification matrix never gates on Canvas screenshot parity. |
 
 Anything outside this matrix is best-effort, not a bug.
 
 ### Resize and layout (owned by `ViewportSystem`, Phase 1)
 
-- Scale mode `RESIZE`; the canvas is always the full viewport. Orientation is never locked;
-  an orientation change is just a resize.
+- Scale mode `NONE`, sized by our own listener: Phaser 4.2.1's `RESIZE` mode sets
+  `canvas.width` from CSS pixels and ignores `zoom`, so it cannot honour a DPR cap.
+  `ViewportSystem` computes render size = CSS size × min(DPR, cap) and the scene calls
+  `scale.resize(renderW, renderH)`, keeping the canvas CSS size at the CSS viewport. World
+  units are render (device) pixels. Orientation is never locked; an orientation change is just
+  a resize.
 - Resize applies on the next frame — camera, HUD and hit regions all read `Viewport`, never
   cached numbers. Module-level size constants are forbidden (already a CLAUDE.md rule).
-- **Device pixel ratio** honoured, capped at 2 for performance; drawn sizes are in CSS pixels,
-  the canvas backing store in device pixels.
+- **Device pixel ratio** honoured, capped at 2 for performance; drawn sizes are in CSS pixels.
 - **Safe-area insets** (`env(safe-area-inset-*)`) read from CSS custom properties into
   `Viewport.safe{Top,Right,Bottom,Left}`; HUD and prompts never enter the insets.
 - Two **layout modes** derived from aspect ratio, not from user agent: `landscape` (≥ 1.0)
@@ -73,7 +78,10 @@ Anything outside this matrix is best-effort, not a bug.
 The design is one button, so "adaptive" means *any surface is the button, and the game tells
 you which one you are using* — not different control schemes.
 
-- **Pointer Events** unify mouse, touch and pen. `pointerdown` anywhere on the canvas is the
+- **Phaser's `Pointer` abstraction** unifies mouse and touch (Phaser 4.2.1 binds
+  `mouse*`/`touch*` DOM events, not Pointer Events; pen arrives as one of those).
+  `Pointer.wasTouch` sets the detected method. `input.activePointers` stays at its default of
+  1 — one button needs no more. A pointer going down anywhere on the canvas is the
   press; the first active pointer owns the hold; extra fingers are ignored, not treated as a
   second press. Hit region is the whole viewport minus nothing — safe-area insets do not
   reduce it.
@@ -160,6 +168,10 @@ interface Car { s: number; x: number; speed: number; lean: -1 | 0 | 1; }
 interface ReflectorPost { s: number; x: number; }         // unlit posts, recycled pool
 ```
 
+Shared types created first, before any system: `src/types/scene-keys.ts`, `lanes.ts`,
+`states.ts`, `game-events.ts`, `platform.ts` — created before any system; no
+`registry-keys.ts` because there is a single `GameScene` and no parallel HUD scene.
+
 ### Systems
 
 - `TrackSystem` — advances `car.s`; extends the ring buffer ahead to `car.s + horizonMetres`
@@ -178,6 +190,14 @@ interface ReflectorPost { s: number; x: number; }         // unlit posts, recycl
 - `ViewportSystem` — kept and extended per the cross-cutting section: DPR cap, safe-area
   insets, `visualViewport` height, and the `landscape`/`portrait` layout mode that sets
   horizon ratio, car scale and HUD anchors.
+- `HudRenderSystem` (placeholder) — score text top-right (landscape) / top-centre (portrait)
+  and two meter rectangles bottom-left per §13, drawn from `Viewport` so the safe-area
+  assertion in the exit gate has something to measure. Real HUD content arrives in Phases 4–5.
+
+Single `GameScene`; no Boot/Preloader until Phase 6 (zero assets), no HUD scene (per-frame
+floats never go through the Registry). Game events are a frame-local `world.events:
+GameEvent[]` drained by render/audio, not Phaser's EventEmitter, so pure systems stay
+Phaser-free.
 
 ### Config keys introduced
 
@@ -324,9 +344,10 @@ Given `(rng, car.s, speed, difficulty ∈ [0,1])`, emit the next `Emission` at
 1. **4.3.1 survivable** — the hazard leaves ≥ 1 lane free; for a curve, the inner lane is the
    safe lane; an anchor exists on a free lane.
 2. **4.3.2 safe side** — every anchor's `lane ∉ hazard.lanes`.
-3. **4.3.3 anchor first** — `anchor.s + glowRadius(speed, power) ≥ hazard.s + leadMargin`,
-   i.e. the anchor is inside the glow before the hazard is inside the cone. (Uses the
-   Phase-4 glow floor; until Phase 4, `glowRadius = ropeRange`.)
+3. **4.3.3 anchor first** — anchor visibility onset is `car.s = anchor.s − glowRadius`;
+   hazard actionability onset is `car.s = hazard.s − coneLength`. Invariant:
+   `anchor.s − glowRadius ≤ hazard.s − coneLength − leadMargin`. (Uses the Phase-4 glow floor;
+   until Phase 4, `glowRadius = ropeRange` and `coneLength = light.maxCone`.)
 4. **4.3.4 floor** — `(anchor.windowCloseS - anchor.windowOpenS) / speed ≥ rope.floorSeconds`.
 5. **4.3.5 one cycle** — `nextHazard.s - thisHazard.s ≥ speed × (pullDuration + holdMin +
    returnDuration) + hazard.length`, and if the required swings are opposite, add
@@ -429,7 +450,9 @@ matching config.
 - `speed = speed.start + (speed.cap - speed.start) × ramp(t)`, `speed.cap = 3 × speed.start`.
 - `difficulty = ramp(t)` drives spawn interval and combo probability (G0.3); both hold at
   `t ≥ rampSeconds`.
-- `score = floor(elapsedSeconds)`; best in `localStorage` under `nightline.best`.
+- `score = floor(elapsedSeconds)`; best is held in memory for the session (GDD §9) and
+  mirrored to `localStorage['nightline.best']` inside try/catch as an upgrade only — the
+  embed surface may have no storage.
 - Collision → `impactSeconds` beat (input ignored, screen shake) → game-over overlay with
   score, best, seed → any press → fresh run. `Rope`, `Light`, `Track`, generator and RNG all
   reset; RNG reseeds from `Date.now()` unless a `?seed=` query param is present.
@@ -443,7 +466,7 @@ matching config.
 1. `ProgressionSystem` (pure) + unit test: `speed(0) = start`, `speed(rampSeconds) = cap`,
    `speed(rampSeconds + 600) = cap`, monotone non-decreasing.
 2. `ScoreSystem` (pure).
-3. `PlayScene` run lifecycle; game-over overlay; `?seed=` support.
+3. `GameScene` run lifecycle; game-over overlay; `?seed=` support.
 4. Harness: scripted 6-minute oracle run asserting speed tracks config within 1%, then a
    forced crash and a restart with a clean world (all pools recycled, no orphaned entities).
 
@@ -527,3 +550,5 @@ happens in Phase 2 (rope) and Phase 5 (ramp) against a controller, and is a conf
    to `light.minCone`, so the current lane is always readable.
 4. **Rope snap must be telegraphed** — `Rope.tension` is exposed from Phase 2 so render and
    audio can warn before the snap.
+5. **Canvas tier is unstyled.** Filters/glow are WebGL-only; on Canvas the game must remain
+   readable with flat colour. Phase 6 must keep a no-filter path.

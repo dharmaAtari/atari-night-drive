@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { loadConfig } from './config';
-import { PlayScene } from './scenes/PlayScene';
+import { GameScene } from './scenes/GameScene';
 
 async function bootstrap(): Promise<void> {
   const config = await loadConfig();
@@ -11,11 +11,12 @@ async function bootstrap(): Promise<void> {
     backgroundColor: '#000000',
     fps: { target: config.performance.targetFps, forceSetTimeOut: false },
     scale: {
-      mode: Phaser.Scale.RESIZE,
+      mode: Phaser.Scale.NONE,
       width: window.innerWidth,
       height: window.innerHeight,
     },
-    scene: [new PlayScene(config)],
+    input: { activePointers: 1 },
+    scene: [new GameScene(config)],
   });
 
   if (import.meta.env.DEV) {
