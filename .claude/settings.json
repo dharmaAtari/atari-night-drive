@@ -1,0 +1,5 @@
+{
+  "enabledPlugins": {
+    "phaser4-gamedev@phaser4-gamedev": true
+  }
+}
