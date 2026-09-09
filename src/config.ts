@@ -54,6 +54,10 @@ export interface GameConfigFile {
     minIntervalSeconds: number;
     maxIntervalSeconds: number;
     comboThreshold: number;
+    curveChance: number;
+    comboChance: number;
+    leadMargin: number;
+    densityCapDifficulty: number;
     weights: {
       stalled: number;
       barrier: number;
@@ -67,6 +71,7 @@ export interface GameConfigFile {
     };
   };
   light: {
+    startPower: number;
     minCone: number;
     maxCone: number;
     highBeamCone: number;
@@ -83,6 +88,7 @@ export interface GameConfigFile {
   fail: {
     impactSeconds: number;
   };
+  platform: { arkadium: boolean };
   audio: Record<string, string>;
   debug: {
     autoCentre: boolean;

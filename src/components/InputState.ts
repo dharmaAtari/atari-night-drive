@@ -1,8 +1,11 @@
+import type { InputMethod } from '../types/platform';
+
 export interface InputState {
-  steer: number;
-  confirmHeld: boolean;
+  held: boolean;
+  pressedThisFrame: boolean;
+  method: InputMethod;
 }
 
 export function createInputState(): InputState {
-  return { steer: 0, confirmHeld: false };
+  return { held: false, pressedThisFrame: false, method: null };
 }

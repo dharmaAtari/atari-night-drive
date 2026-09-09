@@ -15,7 +15,7 @@ async function bootstrap(): Promise<void> {
       width: window.innerWidth,
       height: window.innerHeight,
     },
-    input: { activePointers: 1 },
+    input: { activePointers: 1, gamepad: true },
     scene: [new GameScene(config)],
   });
 

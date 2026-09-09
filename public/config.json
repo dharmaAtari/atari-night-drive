@@ -40,9 +40,9 @@
     "closeMargin": 8,
     "maxExtent": 3.2,
     "throwDuration": 0.08,
-    "pullDuration": 0.30,
+    "pullDuration": 0.3,
     "returnDuration": 0.45,
-    "missCooldown": 0.50,
+    "missCooldown": 0.5,
     "holdMin": 0.25
   },
   "curves": {
@@ -66,7 +66,11 @@
     "pickupChance": {
       "power": 0.18,
       "highBeam": 0.08
-    }
+    },
+    "leadMargin": 10,
+    "densityCapDifficulty": 1.0,
+    "curveChance": 0.35,
+    "comboChance": 0.6
   },
   "light": {
     "minCone": 40,
@@ -77,7 +81,8 @@
     "drainPerSecond": 0.012,
     "drainPerMetre": 0.0004,
     "powerPickup": 0.35,
-    "highBeamDrainPerSecond": 0.25
+    "highBeamDrainPerSecond": 0.25,
+    "startPower": 1.0
   },
   "score": {
     "pointsPerSecond": 1
@@ -87,7 +92,10 @@
   },
   "audio": {},
   "debug": {
-    "autoCentre": true,
+    "autoCentre": false,
     "showSeed": true
+  },
+  "platform": {
+    "arkadium": false
   }
 }
