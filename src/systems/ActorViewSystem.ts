@@ -37,6 +37,7 @@ import {
   type World,
 } from '../world.js';
 import { coneLength, glowRadius, obstacleAlpha } from './LightSystem.js';
+import { anchorX } from './AnchorSystem.js';
 import { projectAtS, screenXAt } from './CameraSystem.js';
 import { isRopeAttached, laneX } from './RopeSystem.js';
 
@@ -245,7 +246,7 @@ export default class ActorViewSystem {
 
       const height = point.halfWidth * ANCHOR_HEIGHT_RATIO * grow;
       const texture = anchorTexture(anchor);
-      this.place(entity, screenXAt(point, laneX(anchor.lane, config.lanes.width), config.road.halfWidth), point.y, height, texture);
+      this.place(entity, screenXAt(point, anchorX(anchor.lane, config), config.road.halfWidth), point.y, height, texture);
 
       const sprite = entity.get(SPRITE)!;
       sprite.texture = texture;
@@ -324,7 +325,7 @@ export default class ActorViewSystem {
 
     shape.points = [
       { x: projection.carScreenX, y: projection.carScreenY - projection.carScreenHeight / 2 },
-      { x: screenXAt(point, laneX(anchor.lane, config.lanes.width), config.road.halfWidth), y: point.y },
+      { x: screenXAt(point, anchorX(anchor.lane, config), config.road.halfWidth), y: point.y },
     ];
     shape.dirty = true;
     shape.strokeColor = lerpColor(ROPE_COLOR, ROPE_WARNING_COLOR, warn);
@@ -364,7 +365,7 @@ export default class ActorViewSystem {
     const scale = size.width > 0 ? target / size.width : 1;
 
     transform.x = point
-      ? screenXAt(point, laneX(anchor!.lane, world.config.lanes.width), world.config.road.halfWidth)
+      ? screenXAt(point, anchorX(anchor!.lane, world.config), world.config.road.halfWidth)
       : world.projection.carScreenX;
     transform.y = point ? point.y : world.projection.carScreenY;
     transform.scaleX = scale;

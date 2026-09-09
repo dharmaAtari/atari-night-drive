@@ -65,6 +65,7 @@
   },
   "road": {
     "halfWidth": 1.5,
+    "anchorOffset": 0.06,
     "horizonMetres": 300,
     "tailMetres": 10,
     "segmentLength": 5,
