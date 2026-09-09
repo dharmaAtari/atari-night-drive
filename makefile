@@ -1,46 +1,45 @@
-# Atari Night Drive -- build, run and packaging targets.
+# Atari Night Drive -- thin wrapper over the npm/Vite scripts in package.json.
+# Every target here shells out to npm; package.json stays the source of truth.
 
-PHASER_SRC := node_modules/phaser/dist/phaser.esm.js
-PHASER_DST := bin/lib/phaser.esm.js
-PORT       ?= 8000
-DIST       ?= dist
+NPM  ?= npm
+PORT ?= 8000
 
-.PHONY: all build run serve clean package deps
+.PHONY: help all deps dev build preview typecheck clean distclean
 
+help:
+	@echo "targets:"
+	@sed -n 's/^## //p' $(MAKEFILE_LIST)
+
+## all: install dependencies and produce a production build
 all: build
 
-## deps: fetch node dependencies (Phaser)
+## deps: install node dependencies
 deps: node_modules
 
-node_modules: package.json
-	npm install
+node_modules: package.json package-lock.json
+	$(NPM) install
 	@touch $@
 
-## build: vendor the Phaser runtime into bin/lib/ so the game can be served statically
-build: $(PHASER_DST)
+## dev: start the Vite dev server on http://localhost:$(PORT)/
+dev: | node_modules
+	$(NPM) run dev -- --port $(PORT)
 
-$(PHASER_DST): $(PHASER_SRC) | node_modules
-	@mkdir -p $(dir $@)
-	cp $< $@
-	@echo "vendored $< -> $@"
+## build: typecheck, then build into dist/
+build: | node_modules
+	$(NPM) run build
 
-$(PHASER_SRC): | node_modules
+## preview: serve the contents of dist/ as it will ship
+preview: build
+	$(NPM) run preview -- --port $(PORT)
 
-## run: build, then serve the game at http://localhost:$(PORT)/
-run: serve
+## typecheck: run tsc --noEmit without emitting a build
+typecheck: | node_modules
+	$(NPM) run typecheck
 
-serve: build
-	@echo "serving http://localhost:$(PORT)/  (ctrl-c to stop)"
-	python3 -m http.server $(PORT)
-
-## package: produce a self-contained dist/ tree
-package: build
-	rm -rf $(DIST)
-	mkdir -p $(DIST)
-	cp index.html $(DIST)/
-	cp -r src bin $(DIST)/
-	@echo "packaged into $(DIST)/"
-
-## clean: remove generated files
+## clean: remove the build output
 clean:
-	rm -rf bin/lib $(DIST)
+	rm -rf dist
+
+## distclean: clean, and drop node_modules too
+distclean: clean
+	rm -rf node_modules

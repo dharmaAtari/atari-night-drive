@@ -1,24 +1,24 @@
 {
   "name": "atari-night-drive",
   "version": "1.0.0",
+  "description": "A 2D night-driving game built with Phaser 4, TypeScript and Vite.",
   "type": "module",
-  "description": "",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dharmaAtari/atari-night-drive.git"
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/dharmaAtari/atari-night-drive/issues"
-  },
-  "homepage": "https://github.com/dharmaAtari/atari-night-drive#readme",
   "dependencies": {
     "phaser": "^4.2.1"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.2.2"
   }
 }

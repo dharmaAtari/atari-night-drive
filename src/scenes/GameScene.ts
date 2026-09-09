@@ -11,20 +11,23 @@
 import BaseScene from './BaseScene.js';
 import { SceneKey } from './keys.js';
 import Entity from '../entities/Entity.js';
-import { Transform, Text, UserInput, USER_INPUT } from '../components/index.js';
+import { Transform, Text, UserInput, TRANSFORM, USER_INPUT } from '../components/index.js';
+
+/** Gap between the title and the hint under it, in pixels. */
+const HINT_OFFSET = 48;
 
 export default class GameScene extends BaseScene {
+  private title!: Entity;
+  private hint!: Entity;
+
   constructor() {
     super({ key: SceneKey.GAME });
   }
 
-  build() {
-    const { width, height } = this.scale.gameSize;
-    const centreX = width / 2;
-
-    this.addEntity(
+  protected override build(): void {
+    this.title = this.addEntity(
       new Entity('game.title')
-        .add(Transform({ x: centreX, y: height / 2 - 16 }))
+        .add(Transform())
         .add(
           Text({
             content: 'NIGHT DRIVE',
@@ -40,7 +43,7 @@ export default class GameScene extends BaseScene {
     // Carries the UserInput because it is the entity watching for the way out.
     this.hint = this.addEntity(
       new Entity('game.hint')
-        .add(Transform({ x: centreX, y: height / 2 + 32 }))
+        .add(Transform())
         .add(
           Text({
             content: 'press SPACE to return',
@@ -55,8 +58,25 @@ export default class GameScene extends BaseScene {
     );
   }
 
-  updateEntities() {
-    if (this.hint.get(USER_INPUT).action.justDown) {
+  protected override layout(width: number, height: number): void {
+    const centreX = width / 2;
+    const centreY = height / 2;
+
+    const title = this.title.get(TRANSFORM);
+    if (title) {
+      title.x = centreX;
+      title.y = centreY - HINT_OFFSET / 3;
+    }
+
+    const hint = this.hint.get(TRANSFORM);
+    if (hint) {
+      hint.x = centreX;
+      hint.y = centreY + HINT_OFFSET;
+    }
+  }
+
+  protected override updateEntities(): void {
+    if (this.hint.get(USER_INPUT)?.action.justDown) {
       this.scene.start(SceneKey.MENU);
     }
   }

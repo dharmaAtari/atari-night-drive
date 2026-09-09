@@ -13,28 +13,38 @@
 export const TEXT = 'text';
 
 /** Horizontal alignment for multi-line strings. */
-export const TextAlign = Object.freeze({
+export const TextAlign = {
   LEFT: 'left',
   CENTER: 'center',
   RIGHT: 'right',
-});
+} as const;
 
-/**
- * @param {object}  [values]
- * @param {string}  [values.content]         the string to draw
- * @param {string}  [values.fontFamily]      CSS font family
- * @param {number}  [values.fontSize]        pixels
- * @param {string}  [values.fontStyle]       '', 'bold', 'italic', ...
- * @param {string}  [values.color]           CSS colour
- * @param {?string} [values.strokeColor]     CSS colour, or null for no outline
- * @param {number}  [values.strokeWidth]     pixels
- * @param {string}  [values.align]           one of {@link TextAlign}
- * @param {number}  [values.originX]         0 = left, 0.5 = centred, 1 = right
- * @param {number}  [values.originY]         0 = top,  0.5 = centred, 1 = bottom
- * @param {number}  [values.alpha]           0..1
- * @param {boolean} [values.visible]         skipped by the renderer when false
- * @param {boolean} [values.dirty]           content changed since last render
- */
+export type TextAlignValue = (typeof TextAlign)[keyof typeof TextAlign];
+
+export interface TextComponent {
+  readonly type: typeof TEXT;
+  content: string;
+  fontFamily: string;
+  /** pixels */
+  fontSize: number;
+  /** '', 'bold', 'italic', ... */
+  fontStyle: string;
+  /** CSS colour */
+  color: string;
+  /** CSS colour, or null for no outline */
+  strokeColor: string | null;
+  strokeWidth: number;
+  align: TextAlignValue;
+  originX: number;
+  originY: number;
+  alpha: number;
+  visible: boolean;
+  /** content changed since the last render */
+  dirty: boolean;
+}
+
+export type TextInit = Partial<Omit<TextComponent, 'type'>>;
+
 export function Text({
   content = '',
   fontFamily = 'monospace',
@@ -49,7 +59,7 @@ export function Text({
   alpha = 1,
   visible = true,
   dirty = true,
-} = {}) {
+}: TextInit = {}): TextComponent {
   return {
     type: TEXT,
     content,

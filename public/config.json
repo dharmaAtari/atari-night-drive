@@ -1,0 +1,20 @@
+{
+  "display": {
+    "width": 640,
+    "height": 480,
+    "scaleMode": "fit",
+    "autoCenter": true,
+    "fullscreen": false,
+    "backgroundColor": "#1a3aa8",
+    "pixelArt": true
+  },
+  "performance": {
+    "targetFps": 60
+  },
+  "audio": {
+    "volume": 1,
+    "sounds": {
+      "enginesound": "vroom.mp3"
+    }
+  }
+}

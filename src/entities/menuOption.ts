@@ -8,15 +8,22 @@ import { Transform, Text, TextAlign } from '../components/index.js';
 /** Drawn above the selection box, which sits at depth 0. */
 const LABEL_DEPTH = 1;
 
-/**
- * @param {object} options
- * @param {string} options.label     the text shown, e.g. 'PLAY'
- * @param {number} options.x
- * @param {number} options.y
- * @param {number} [options.fontSize]
- * @param {string} [options.color]
- */
-export default function menuOption({ label, x, y, fontSize = 24, color = '#ffffff' }) {
+export interface MenuOptionInit {
+  /** the text shown, e.g. 'PLAY' */
+  label: string;
+  x: number;
+  y: number;
+  fontSize?: number;
+  color?: string;
+}
+
+export default function menuOption({
+  label,
+  x,
+  y,
+  fontSize = 24,
+  color = '#ffffff',
+}: MenuOptionInit): Entity {
   return new Entity(`menu.${label.toLowerCase()}`)
     .add(Transform({ x, y, depth: LABEL_DEPTH }))
     .add(

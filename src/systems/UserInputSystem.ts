@@ -11,18 +11,17 @@
  * system that consumed an edge on one entity would silently consume it for all
  * of them.
  */
-import { USER_INPUT, InputButton } from '../components/index.js';
+import type Entity from '../entities/Entity.js';
+import { USER_INPUT, InputButton, type UserInputComponent } from '../components/index.js';
 
 export default class UserInputSystem {
-  /**
-   * @param {import('../entities/Entity.js').default[]} entities
-   * @param {object} sceneInput the scene's UserInput component
-   */
-  update(entities, sceneInput) {
+  update(entities: Entity[], sceneInput: UserInputComponent): void {
     for (const entity of entities) {
-      if (!entity.active || !entity.has(USER_INPUT)) continue;
+      if (!entity.active) continue;
 
       const target = entity.get(USER_INPUT);
+      if (!target) continue;
+
       for (const button of Object.values(InputButton)) {
         const from = sceneInput[button];
         const to = target[button];

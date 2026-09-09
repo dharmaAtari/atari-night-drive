@@ -9,49 +9,46 @@
  *     .add(Transform({ x: 320, y: 120 }))
  *     .add(Text({ content: 'NIGHT DRIVE', fontSize: 32 }));
  *
- *   const highlight = new Entity('menu.highlight')
- *     .add(Transform({ x: 320, y: 240, depth: -1 }))
- *     .add(Shape({ kind: ShapeKind.RECTANGLE, width: 200, height: 28 }));
- *
  * `add` returns the entity, so a factory can build one in a single expression.
  * Subclassing works too (`class MenuItem extends Entity`) if a screen wants to
  * keep its own references tidy, but prefer plain factories in `entities/` —
  * an entity with methods on it stops being an entity.
  */
+import type { AnyComponent, ComponentKey, ComponentMap } from '../components/index.js';
 
 let nextId = 1;
 
 export default class Entity {
+  /** unique for the lifetime of the page */
+  readonly id: number;
+
   /**
-   * @param {string} [name] optional debug label, e.g. 'menu.startButton'.
-   *                        For logging and readable dumps only — never look an
-   *                        entity up by it.
+   * Optional debug label, e.g. 'menu.startButton'. For logging and readable
+   * dumps only — never look an entity up by it.
    */
+  name: string;
+
+  /**
+   * Component key -> component. Null-prototype so a component named
+   * 'constructor' or 'toString' can never collide with Object's own keys.
+   */
+  components: Partial<ComponentMap>;
+
+  /** Systems skip this entity when false. */
+  active: boolean;
+
   constructor(name = '') {
-    /** @type {number} unique for the lifetime of the page */
     this.id = nextId++;
-
     this.name = name;
-
-    /**
-     * component key -> component. Null-prototype so a component named
-     * 'constructor' or 'toString' can never collide with Object's own keys.
-     * @type {Record<string, object>}
-     */
-    this.components = Object.create(null);
-
-    /** Systems skip this entity when false. */
+    this.components = Object.create(null) as Partial<ComponentMap>;
     this.active = true;
   }
 
   /**
    * Attach one or more components, each keyed by its own `type`. Attaching a
    * second component of the same type replaces the first.
-   *
-   * @param {...object} components
-   * @returns {this} for chaining
    */
-  add(...components) {
+  add(...components: AnyComponent[]): this {
     for (const component of components) {
       if (!component || typeof component.type !== 'string') {
         throw new TypeError(
@@ -59,34 +56,27 @@ export default class Entity {
             `factory (they carry a string 'type'), got ${JSON.stringify(component)}`,
         );
       }
-      this.components[component.type] = component;
+      // The union guarantees key and value line up, but TS cannot see that
+      // through a dynamic key on a discriminated union.
+      (this.components as Record<string, AnyComponent>)[component.type] = component;
     }
     return this;
   }
 
-  /**
-   * @param {string} type a component key, e.g. `TEXT`
-   * @returns {?object} the component, or null if it isn't attached
-   */
-  get(type) {
-    return this.components[type] ?? null;
+  /** The component, or null if it isn't attached. */
+  get<K extends ComponentKey>(type: K): ComponentMap[K] | null {
+    return (this.components[type] as ComponentMap[K] | undefined) ?? null;
   }
 
   /**
    * True only when every listed component is attached — this is what systems
    * filter on.
-   *
-   * @param {...string} types
    */
-  has(...types) {
+  has(...types: ComponentKey[]): boolean {
     return types.every((type) => type in this.components);
   }
 
-  /**
-   * @param {...string} types
-   * @returns {this} for chaining
-   */
-  remove(...types) {
+  remove(...types: ComponentKey[]): this {
     for (const type of types) {
       delete this.components[type];
     }
@@ -94,19 +84,19 @@ export default class Entity {
   }
 
   /** Drop every component and mark the entity inactive. */
-  destroy() {
-    this.components = Object.create(null);
+  destroy(): this {
+    this.components = Object.create(null) as Partial<ComponentMap>;
     this.active = false;
     return this;
   }
 
-  /** @returns {string[]} the keys currently attached, for debugging */
-  types() {
+  /** The keys currently attached, for debugging. */
+  types(): string[] {
     return Object.keys(this.components);
   }
 
-  /** @returns {string} short identifier for logs and error messages */
-  describe() {
+  /** Short identifier for logs and error messages. */
+  describe(): string {
     return this.name ? `#${this.id} (${this.name})` : `#${this.id}`;
   }
 }

@@ -20,25 +20,29 @@
  * Deriving them here means `justDown` stays true for the whole frame no matter
  * how many entities look at it.
  */
-import { InputButton } from '../components/index.js';
+import {
+  InputButton,
+  type InputButtonValue,
+  type UserInputComponent,
+} from '../components/index.js';
 
 /**
  * Which physical keys drive each button, as KeyboardEvent `code` values. Any
  * one of them counts as pressed.
  */
-export const KEY_BINDINGS = Object.freeze({
+export const KEY_BINDINGS: Record<InputButtonValue, string[]> = {
   [InputButton.UP]: ['ArrowUp', 'KeyW'],
   [InputButton.DOWN]: ['ArrowDown', 'KeyS'],
   [InputButton.ACTION]: ['Space', 'Enter'],
-});
+};
 
 const BOUND_CODES = new Set(Object.values(KEY_BINDINGS).flat());
 
 /** Codes currently held, shared by every scene for the life of the page. */
-const pressed = new Set();
+const pressed = new Set<string>();
 let listening = false;
 
-function startListening() {
+function startListening(): void {
   if (listening || typeof window === 'undefined') return;
   listening = true;
 
@@ -63,11 +67,8 @@ export default class KeyboardInputSystem {
     startListening();
   }
 
-  /**
-   * Samples the keyboard into `userInput`, in place.
-   * @param {object} userInput the scene's UserInput component
-   */
-  update(userInput) {
+  /** Samples the keyboard into `userInput`, in place. */
+  update(userInput: UserInputComponent): void {
     for (const button of Object.values(InputButton)) {
       const state = userInput[button];
       const wasDown = state.down;
@@ -84,7 +85,7 @@ export default class KeyboardInputSystem {
    * knowing what is already held rather than treating it as freshly pressed.
    * Call once when a scene is created.
    */
-  prime(userInput) {
+  prime(userInput: UserInputComponent): void {
     this.update(userInput);
     for (const button of Object.values(InputButton)) {
       userInput[button].justDown = false;

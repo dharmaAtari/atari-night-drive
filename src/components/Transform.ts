@@ -9,15 +9,29 @@
 /** Key this component is stored under on an entity. */
 export const TRANSFORM = 'transform';
 
-/**
- * @param {object}  [values]
- * @param {number}  [values.x]         world x in pixels
- * @param {number}  [values.y]         world y in pixels
- * @param {number}  [values.rotation]  radians, clockwise, 0 = facing right
- * @param {number}  [values.scaleX]    1 = native size
- * @param {number}  [values.scaleY]    1 = native size
- * @param {number}  [values.depth]     render sort order; higher draws on top
- */
+export interface TransformComponent {
+  readonly type: typeof TRANSFORM;
+  /** world x in pixels */
+  x: number;
+  /** world y in pixels */
+  y: number;
+  /** radians, clockwise, 0 = facing right */
+  rotation: number;
+  scaleX: number;
+  scaleY: number;
+  /** render sort order; higher draws on top */
+  depth: number;
+}
+
+export interface TransformInit {
+  x?: number;
+  y?: number;
+  rotation?: number;
+  scaleX?: number;
+  scaleY?: number;
+  depth?: number;
+}
+
 export function Transform({
   x = 0,
   y = 0,
@@ -25,7 +39,7 @@ export function Transform({
   scaleX = 1,
   scaleY = 1,
   depth = 0,
-} = {}) {
+}: TransformInit = {}): TransformComponent {
   return { type: TRANSFORM, x, y, rotation, scaleX, scaleY, depth };
 }
 

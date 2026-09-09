@@ -1,11 +1,11 @@
 # dependencies
 node_modules/
 
-# vendored Phaser runtime (regenerate with `make build`)
-bin/lib/
-
-# packaged output
+# build output
 dist/
+
+# claude
+.claude/logs/
 
 # editor / OS cruft
 .DS_Store

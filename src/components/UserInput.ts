@@ -15,10 +15,6 @@
  * pressed mean different things here: menus step one row per press and so read
  * `justDown`, while gameplay may want `down` for as long as the button is held.
  *
- *   down      true for every frame the button is held
- *   justDown  true only on the frame it went down
- *   justUp    true only on the frame it came back up
- *
  * The edge flags are true for exactly one frame, so an input system must clear
  * them at the start of each frame before writing the new ones.
  */
@@ -30,14 +26,35 @@ export const USER_INPUT = 'userInput';
  * The button names, for systems that want to walk all three rather than name
  * each one — clearing edge flags, remapping keys, drawing a debug overlay.
  */
-export const InputButton = Object.freeze({
+export const InputButton = {
   UP: 'up',
   DOWN: 'down',
   ACTION: 'action',
-});
+} as const;
 
-/** @returns {{down: boolean, justDown: boolean, justUp: boolean}} */
-function buttonState() {
+export type InputButtonValue = (typeof InputButton)[keyof typeof InputButton];
+
+export interface ButtonState {
+  /** true for every frame the button is held */
+  down: boolean;
+  /** true only on the frame it went down */
+  justDown: boolean;
+  /** true only on the frame it came back up */
+  justUp: boolean;
+}
+
+export interface UserInputComponent {
+  readonly type: typeof USER_INPUT;
+  /** menu navigation — move the selection up */
+  up: ButtonState;
+  /** menu navigation — move the selection down */
+  down: ButtonState;
+  /** the one button gameplay reads */
+  action: ButtonState;
+}
+
+/** Fresh, independent state for one button. */
+function buttonState(): ButtonState {
   return { down: false, justDown: false, justUp: false };
 }
 
@@ -45,15 +62,11 @@ function buttonState() {
  * Takes no arguments: every button starts released, and only input systems have
  * any business setting them.
  */
-export function UserInput() {
+export function UserInput(): UserInputComponent {
   return {
     type: USER_INPUT,
-
-    /** menu navigation — move the selection up */
     up: buttonState(),
-    /** menu navigation — move the selection down */
     down: buttonState(),
-    /** the one button gameplay reads */
     action: buttonState(),
   };
 }

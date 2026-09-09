@@ -11,15 +11,16 @@ import { Transform, Shape, UserInput, ShapeKind } from '../components/index.js';
 /** Drawn behind the labels, which sit at depth 1. */
 const BOX_DEPTH = 0;
 
-/**
- * @param {object} options
- * @param {number} options.x
- * @param {number} options.y
- * @param {number} [options.width]
- * @param {number} [options.height]
- * @param {number} [options.strokeColor]  0xRRGGBB
- * @param {number} [options.strokeWidth]
- */
+export interface SelectionBoxInit {
+  x: number;
+  y: number;
+  width?: number;
+  height?: number;
+  /** 0xRRGGBB */
+  strokeColor?: number;
+  strokeWidth?: number;
+}
+
 export default function selectionBox({
   x,
   y,
@@ -27,7 +28,7 @@ export default function selectionBox({
   height = 36,
   strokeColor = 0xffffff,
   strokeWidth = 2,
-}) {
+}: SelectionBoxInit): Entity {
   return new Entity('menu.selectionBox')
     .add(Transform({ x, y, depth: BOX_DEPTH }))
     .add(

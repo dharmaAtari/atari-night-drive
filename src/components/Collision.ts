@@ -15,15 +15,15 @@
 export const COLLISION = 'collision';
 
 /** Collider bounds. Rectangles and circles only. */
-export const ColliderKind = Object.freeze({
+export const ColliderKind = {
   RECTANGLE: 'rectangle',   // uses width, height
   CIRCLE: 'circle',         // uses radius
-});
+} as const;
 
-/**
- * Layer bit flags. Extend with further powers of two as the game grows.
- */
-export const CollisionLayer = Object.freeze({
+export type ColliderKindValue = (typeof ColliderKind)[keyof typeof ColliderKind];
+
+/** Layer bit flags. Extend with further powers of two as the game grows. */
+export const CollisionLayer = {
   NONE: 0,
   PLAYER: 1 << 0,
   TRAFFIC: 1 << 1,
@@ -31,21 +31,30 @@ export const CollisionLayer = Object.freeze({
   PICKUP: 1 << 3,
   TRIGGER: 1 << 4,    // checkpoints, section boundaries
   ALL: 0xffffffff,
-});
+} as const;
 
-/**
- * @param {object}  [values]
- * @param {string}  [values.kind]       one of {@link ColliderKind}
- * @param {number}  [values.width]      rectangle
- * @param {number}  [values.height]     rectangle
- * @param {number}  [values.radius]     circle
- * @param {number}  [values.offsetX]    collider centre relative to the transform
- * @param {number}  [values.offsetY]    collider centre relative to the transform
- * @param {number}  [values.layer]      {@link CollisionLayer} bits this entity is
- * @param {number}  [values.mask]       {@link CollisionLayer} bits it tests against
- * @param {boolean} [values.isTrigger]  report overlaps but skip any response
- * @param {boolean} [values.enabled]    skipped entirely when false
- */
+export interface CollisionComponent {
+  readonly type: typeof COLLISION;
+  kind: ColliderKindValue;
+  width: number;
+  height: number;
+  radius: number;
+  /** collider centre relative to the transform */
+  offsetX: number;
+  offsetY: number;
+  /** CollisionLayer bits this entity is */
+  layer: number;
+  /** CollisionLayer bits it tests against */
+  mask: number;
+  /** report overlaps but skip any response */
+  isTrigger: boolean;
+  enabled: boolean;
+  /** entity ids overlapping this frame; written by CollisionSystem */
+  contacts: number[];
+}
+
+export type CollisionInit = Partial<Omit<CollisionComponent, 'type' | 'contacts'>>;
+
 export function Collision({
   kind = ColliderKind.RECTANGLE,
   width = 0,
@@ -57,7 +66,7 @@ export function Collision({
   mask = CollisionLayer.ALL,
   isTrigger = false,
   enabled = true,
-} = {}) {
+}: CollisionInit = {}): CollisionComponent {
   return {
     type: COLLISION,
     kind,
@@ -72,7 +81,6 @@ export function Collision({
     enabled,
 
     // Written by CollisionSystem each frame; cleared before it runs.
-    /** @type {Array<string|number>} entity ids overlapping this frame */
     contacts: [],
   };
 }

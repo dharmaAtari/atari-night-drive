@@ -1,15 +1,15 @@
 /**
  * Phaser bootstrap.
  *
- * Reads bin/config.xml first, then starts the game with those settings so the
- * display size, frame rate and palette are all data-driven.
+ * Reads public/config.json first, then starts the game with those settings so
+ * the display size, frame rate and palette are all data-driven.
  */
-import Phaser from '../bin/lib/phaser.esm.js';
+import Phaser from 'phaser';
 import { loadConfig } from './config.js';
 import MenuScene from './scenes/MenuScene.js';
 import GameScene from './scenes/GameScene.js';
 
-async function boot() {
+async function boot(): Promise<Phaser.Game> {
   const config = await loadConfig();
   const { display, performance } = config;
 
@@ -21,7 +21,7 @@ async function boot() {
     backgroundColor: display.backgroundColor,
     pixelArt: display.pixelArt,
     scale: {
-      mode: Phaser.Scale[display.scaleMode],
+      mode: display.scaleMode,
       autoCenter: display.autoCenter ? Phaser.Scale.CENTER_BOTH : Phaser.Scale.NO_CENTER,
     },
     fps: {
@@ -31,18 +31,24 @@ async function boot() {
     scene: [MenuScene, GameScene],
   });
 
-  // Make the parsed config reachable from any scene via `this.game.config.runtime`.
-  game.config.runtime = config;
+  // Reachable from any scene as `this.game.registry.get('config')`.
+  game.registry.set('config', config);
 
   if (display.fullscreen) {
     game.events.once(Phaser.Core.Events.READY, () => game.scale.startFullscreen());
   }
 
+  // The headless playtest harness drives the game through this handle.
+  if (import.meta.env.DEV) {
+    (window as unknown as { __PHASER_GAME__: Phaser.Game }).__PHASER_GAME__ = game;
+  }
+
   return game;
 }
 
-boot().catch((error) => {
+boot().catch((error: unknown) => {
+  const message = error instanceof Error ? error.message : String(error);
   console.error('[night-drive] boot failed:', error);
   document.body.innerHTML =
-    `<pre style="color:#f66;font:14px monospace;padding:16px">Boot failed: ${error.message}</pre>`;
+    `<pre style="color:#f66;font:14px monospace;padding:16px">Boot failed: ${message}</pre>`;
 });
