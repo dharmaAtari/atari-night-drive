@@ -11,7 +11,22 @@ A 2D night-driving game built with **Phaser 4**, TypeScript and Vite.
 | Bundler / dev server | Vite |
 | Package manager | npm |
 
-There is no `makefile` and no `bin/` directory. Build and run go through npm scripts.
+Build and run go through npm scripts. A `makefile` wraps them for convenience — every
+target shells out to npm, so `package.json` stays the source of truth. There is no `bin/`
+directory.
+
+| Command | Does |
+|---|---|
+| `make help` | list targets (the default target is `all`, so ask for `help` explicitly) |
+| `make deps` | `npm install`, skipped when `node_modules` is already current |
+| `make dev` | dev server on `http://localhost:8000/` |
+| `make build` | typecheck, then build into `dist/` |
+| `make preview` | **builds first**, then serves `dist/` — never a stale build |
+| `make typecheck` | `tsc --noEmit` |
+| `make clean` / `make distclean` | drop `dist/` / also drop `node_modules` |
+
+Port is overridable (`make dev PORT=3000`). The ports differ between the two entry points:
+bare `npm run preview` uses Vite's default 4173, while `make preview` forces 8000.
 
 ## Architecture — ECS
 
@@ -20,15 +35,17 @@ gameplay code**. This is the load-bearing reason for the architecture; preserve 
 
 - `src/entities/` — factories that assemble an entity from components. No behaviour.
 - `src/components/` — pure data containers. No logic, no methods. Keep them small and
-  single-purpose: `Position`, `Velocity`, `Sprite`, `Input`, `Collider`, `EngineSound`.
+  single-purpose. Today: `Transform`, `Shape`, `Text`, `Collision`, `UserInput`,
+  `Animation` — all re-exported from `src/components/index.ts`, which also holds the
+  `ComponentMap` that makes `entity.get(TRANSFORM)` come back typed.
 - `src/systems/` — all behaviour. Each system queries the entities holding the components
   it cares about and updates them once per frame.
 - `src/scenes/` — Phaser scenes (boot, menu, play). Scenes wire systems together; they do
   not contain gameplay rules.
 
-Every input system writes to the same `Input` component, so gameplay systems never learn
-whether the player is on a keyboard, a touchscreen or a gamepad. Adding an input method
-means adding one system and touching nothing else.
+Every input system writes to the same `UserInput` component, so gameplay systems never
+learn whether the player is on a keyboard, a touchscreen or a gamepad. Adding an input
+method means adding one system and touching nothing else.
 
 ## Runtime config
 
@@ -122,7 +139,8 @@ The harness needs Playwright, installed once per project:
 npm install -D playwright && npx playwright install chromium
 ```
 
-Expose the game for deep checks:
+`src/main.ts` already exposes the game for deep checks, under a `DEV` guard so the handle
+never ships:
 
 ```ts
 if (import.meta.env.DEV) (window as any).__PHASER_GAME__ = game;

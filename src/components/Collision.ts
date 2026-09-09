@@ -1,5 +1,5 @@
 /**
- * Collision — the bounds an entity is tested against, plus what it hit.
+ * Collision — the bounds an entity is tested against. The box, and nothing else.
  *
  * Deliberately coarser than `Shape`: colliders stay rectangles and circles even
  * when the drawn shape is a polygon, because that is all the broad phase needs.
@@ -9,6 +9,13 @@
  * `layer` says what this entity *is*; `mask` says what it *tests against*. Two
  * entities are only considered when each one's mask includes the other's layer,
  * which is what keeps traffic from colliding with itself.
+ *
+ * What this component does NOT hold is the result of a test — no contact list,
+ * no overlap flags. A collider describes a shape; it does not accumulate what
+ * that shape ran into. When `CollisionSystem` lands, the overlaps it finds
+ * belong in its own output (a pair list it returns, or a separate component it
+ * writes), so that reading this component never depends on whether a system has
+ * run yet this frame.
  */
 
 /** Key this component is stored under on an entity. */
@@ -49,11 +56,9 @@ export interface CollisionComponent {
   /** report overlaps but skip any response */
   isTrigger: boolean;
   enabled: boolean;
-  /** entity ids overlapping this frame; written by CollisionSystem */
-  contacts: number[];
 }
 
-export type CollisionInit = Partial<Omit<CollisionComponent, 'type' | 'contacts'>>;
+export type CollisionInit = Partial<Omit<CollisionComponent, 'type'>>;
 
 export function Collision({
   kind = ColliderKind.RECTANGLE,
@@ -79,9 +84,6 @@ export function Collision({
     mask,
     isTrigger,
     enabled,
-
-    // Written by CollisionSystem each frame; cleared before it runs.
-    contacts: [],
   };
 }
 
