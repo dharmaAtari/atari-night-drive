@@ -1,48 +1,82 @@
-# Atari Night Drive
+# Night Line
 
-A 2D night-driving game built with **Phaser 4**, TypeScript and Vite.
+A third-person, one-button endless night driver: press and hold to rope-swing the car
+between lanes around hazards that resolve out of the dark. Built with **Phaser 4**,
+TypeScript and Vite.
+
+Sources of truth: [docs/GDD.md](docs/GDD.md) (design) and
+[docs/implementation-plan.md](docs/implementation-plan.md) (architecture, phases,
+coordinate model, system order). This file is instructions for the coding agent, not a
+design doc — when the two disagree, the docs win and this file is stale.
 
 ## Toolchain
 
 | Piece | Choice |
 |---|---|
-| Engine | Phaser 4 (**not** Phaser 3 — see API Drift below) |
+| Engine | Phaser 4 (**not** Phaser 3 — see API drift below) |
 | Language | TypeScript |
 | Bundler / dev server | Vite |
 | Package manager | npm |
+| Test runner | Vitest — runs every system except Render/Input, no browser needed |
 
 There is no `makefile` and no `bin/` directory. Build and run go through npm scripts.
 
 ## Architecture — ECS
 
-Gameplay logic is split Entity–Component–System so that **input handling stays out of
-gameplay code**. This is the load-bearing reason for the architecture; preserve it.
+Only `*Render*` and `*Input*` systems may import Phaser. Every other system —
+`Progression`, `Track`, `HazardGenerator`, `Anchor`, `Rope`, `Drift`, `Light`, `Pickup`,
+`Collision`, `Score`, `Camera` — is pure TypeScript with no Phaser import, so it runs
+under Vitest without a browser. This is the load-bearing reason for the architecture;
+preserve it.
 
 - `src/entities/` — factories that assemble an entity from components. No behaviour.
-- `src/components/` — pure data containers. No logic, no methods. Keep them small and
-  single-purpose: `Position`, `Velocity`, `Sprite`, `Input`, `Collider`, `EngineSound`.
-- `src/systems/` — all behaviour. Each system queries the entities holding the components
-  it cares about and updates them once per frame.
-- `src/scenes/` — Phaser scenes (boot, menu, play). Scenes wire systems together; they do
-  not contain gameplay rules.
+- `src/components/` — pure data containers. No logic, no methods.
+- `src/systems/` — all behaviour. Pure, except the Render systems and
+  `OneButtonInputSystem`.
+- `src/scenes/` — Phaser scenes wire systems together; they do not contain gameplay rules.
 
-Every input system writes to the same `Input` component, so gameplay systems never learn
-whether the player is on a keyboard, a touchscreen or a gamepad. Adding an input method
-means adding one system and touching nothing else.
+### Coordinate model
+
+- **`s`** — longitudinal metres along the track. Car sits at `carS`; world advances
+  `speed × dt`. Everything ahead has `s > carS`.
+- **`x`** — lateral lane units. Lane width = 1. Lane centres at `x ∈ {-1, 0, +1}`. Road
+  edges at `±roadHalfWidth` (1.5). Car `x` is continuous — the three lanes are
+  attractors, not discrete slots. Off-road when `|x| > roadHalfWidth`.
+- **`κ`** (curvature) — signed, per track segment. `κ > 0` turns right and drifts the car
+  toward `-x`. Drift is zero while the rope is attached.
+- Throw windows, glow radii and spawn lead are distances in metres ahead of the car,
+  derived from speed every frame — never a fixed duration.
+
+### Per-frame system order
+
+```
+OneButtonInput → Progression → Track → HazardGenerator → Anchor → Rope
+→ Drift → Light → Pickup → Collision → Score → Camera → RoadRender → HUD
+```
+
+Input writes `InputState`; nothing downstream reads Phaser input. Render reads the
+world; nothing upstream reads the renderer.
+
+### Gate 0 — resolved decisions
+
+| # | Decision |
+|---|---|
+| G0.1 | Curvature applies continuous outward drift ∝ `curvature × speed`; lanes are attractors, car `x` is continuous |
+| G0.2 | Headlight power scales anchor glow radius, floored at the reaction-window distance for current speed |
+| G0.3 | Hazard density and combo rate ramp on the same curve as speed, cap together, then hold |
+| G0.4 | Up to 2 anchors on screen; selection = nearest ahead of the car; pickups are the second anchor on the same safe side |
 
 ## Runtime config
 
-Tunables live in a config file loaded at runtime, not hardcoded in systems: display
-width/height, scale mode, fullscreen, target fps, and the logical-sound-name → file map
-(e.g. `"enginesound": "vroom.mp3"`). Systems read from config.
+Tunables live in `public/config.json`, read at runtime, never hardcoded in systems:
+lanes, road, camera, drift, speed, rope, curves, hazards, light, score, fail, audio,
+debug. `src/config.ts` loads it; systems read from config, not from constants. See
+implementation-plan.md "Tuning surface" for the full key list.
 
 ## Assets
 
-`public/assets/` — served as static files by Vite.
-
-- `public/assets/sounds/` — audio referenced by the config's sound map
-- `public/assets/sprites/` — static sprite images
-- `public/assets/sprites/animations/` — spritesheets and animation frame sets
+`public/assets/` — served as static files by Vite. See docs/GDD.md §11–12 for the full
+asset and animation catalogue (car, rope/anchors, obstacles, road, roadside, UI).
 
 ## Phaser 4 API drift
 
