@@ -1,0 +1,12 @@
+# dependencies
+node_modules/
+
+# vendored Phaser runtime (regenerate with `make build`)
+bin/lib/
+
+# packaged output
+dist/
+
+# editor / OS cruft
+.DS_Store
+*.swp
