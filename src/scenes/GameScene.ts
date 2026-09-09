@@ -7,6 +7,7 @@
  *
  * The order below is not arbitrary and should not be reshuffled casually:
  *
+ *   countdown    the 3-2-1 — builds and lights the road, moves nothing, then goes
  *   progression  advances the clock and the speed everything else is derived from
  *   spawn        extends the road ahead using that speed
  *   track        moves the car and rebuilds the segment window around it
@@ -34,6 +35,7 @@ import { COLLISION, USER_INPUT } from '../components/index.js';
 import { RunState, createWorld, resetRun, type World } from '../world.js';
 import { resolveSeed } from '../rng.js';
 import { difficultyAt, progressionSystem } from '../systems/ProgressionSystem.js';
+import { countdownSystem } from '../systems/CountdownSystem.js';
 import { createTrackSystem } from '../systems/TrackSystem.js';
 import { createHazardSpawnSystem, curvatureFromHazards, type HazardSpawnSystem } from '../systems/HazardSpawnSystem.js';
 import { anchorSystem } from '../systems/AnchorSystem.js';
@@ -91,7 +93,7 @@ export default class GameScene extends BaseScene {
     // where a curve hazard says it does and the two can never disagree.
     this.trackSystem = createTrackSystem(curvatureFromHazards(this.world));
     this.pickupSystem = createPickupSystem();
-    this.audio = new AudioSystem(config.audio.volume);
+    this.audio = new AudioSystem(this.sound, config.audio.volume);
 
     const textureSize: TextureSize = (key) => this.lookupTextureSize(key);
     this.roadView = new RoadViewSystem();
@@ -134,8 +136,8 @@ export default class GameScene extends BaseScene {
     const held = input.action.down;
     const pressed = input.action.justDown;
 
-    // Browsers refuse to start an AudioContext without a gesture; the first
-    // press is that gesture, whatever else it does.
+    // Browsers refuse to start an AudioContext without a gesture; a press is
+    // that gesture, whatever else it does.
     if (pressed) {
       this.audio.unlock();
       if (world.run.state === RunState.OVER) this.restart();
@@ -157,6 +159,13 @@ export default class GameScene extends BaseScene {
         saveBest(world);
         this.cameras.main.shake(220, 0.012);
       }
+    } else if (world.run.state === RunState.COUNTDOWN) {
+      countdownSystem(world, dt);
+      // The road ahead is built, populated and lit before anything moves, so
+      // the first thing the player sees is what they are about to drive into.
+      this.spawnSystem.run(world, difficultyAt(world.config, 0));
+      this.trackSystem(world, 0);
+      anchorSystem(world);
     } else if (world.run.state === RunState.CRASHING) {
       world.run.crashTimer -= dt;
       if (world.run.crashTimer <= 0) world.run.state = RunState.OVER;
@@ -166,9 +175,9 @@ export default class GameScene extends BaseScene {
 
     this.roadView.update(world);
     this.actorView.update(world, dt);
-    this.hudView.update(world);
+    this.hudView.update(world, dt);
 
-    this.audio.update(world);
+    this.audio.update(world, dt);
 
     // The event queue is one frame long by contract. Everything that needed to
     // see this frame's events has run by now.

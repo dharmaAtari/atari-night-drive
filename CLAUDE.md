@@ -82,15 +82,18 @@ method means adding one system and touching nothing else.
 
 Tunables live in `public/config.json`, loaded at runtime and never hardcoded in systems:
 display, target fps, input, and the whole gameplay tuning surface (`lanes`, `road`,
-`camera`, `speed`, `rope`, `curves`, `hazards`, `light`, `score`, `fail`). `src/config.ts`
+`camera`, `speed`, `rope`, `curves`, `hazards`, `light`, `start`, `score`, `fail`).
+`src/config.ts`
 defaults every field, so a hand-edited config with a missing key still boots.
 
 `assets.sprites` maps a logical key (`'car.body'`) to an SVG and a rasterisation scale;
 `assets.animations` does the same for frame strips. Systems ask for textures by logical key
 only — the path appears exactly once, in the config — so re-skinning is a config edit.
 
-`audio.sounds` is empty on purpose: every sound is synthesised in `AudioSystem`, which is
-why there are no files under `public/assets/sounds/`.
+`audio.sounds` maps a logical key (`'rope.throw'`) to an MP3 under `public/assets/sounds/`,
+loaded by `BootScene` and played by `AudioSystem` by key only. The engine, wind and drift
+loops are shaped by speed and curvature every frame; one-shots fire off `world.events`. The
+rope's taut hum is still synthesised, because its pitch has to glide with live tension.
 
 ## Assets
 
@@ -100,7 +103,7 @@ why there are no files under `public/assets/sounds/`.
   carries `data-token="<name>"` on the same element, so a re-theme is one file plus a
   rewrite pass, with no SVG hand-edited.
 - `public/assets/sprites/{car,anchor,obstacle,road,rope,ui}/` — one file per asset
-- `public/assets/sounds/` — empty; audio is synthesised, not loaded
+- `public/assets/sounds/` — one MP3 per cue, mapped in `config.audio.sounds`
 
 **No sprite atlas, on purpose.** Animation is transform-only — states come from scaling,
 rotating and fading art, never from morphing paths — so there are no per-frame pixel
