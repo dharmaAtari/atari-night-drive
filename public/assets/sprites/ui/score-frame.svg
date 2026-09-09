@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40">
-  <rect data-token="baseNight" fill="#06080c" fill-opacity="0.45" x="0" y="0" width="120" height="40" rx="5" />
-  <path data-token="laneMarking" fill="none" stroke="#9aa4b2" stroke-opacity="0.4" stroke-width="2" d="M4,32 L4,38 L26,38 M116,32 L116,38 L94,38" />
+  <!-- Corner ticks only. The reference frames the score with nothing at all;
+       this is the least that still reads as a place where a number lives. -->
+  <path data-token="hudDim" fill="none" stroke="#d6e4ff" stroke-opacity="0.3" stroke-width="1.5" d="M4,30 L4,37 L24,37 M116,30 L116,37 L96,37" />
 </svg>

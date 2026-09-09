@@ -20,6 +20,17 @@ export function ropeRange(config: GameConfig, speed: number): number {
   return Math.max(config.rope.baseRange, speed * config.rope.floorSeconds + config.rope.closeMargin);
 }
 
+/**
+ * Where an anchor post physically stands, as a lateral world position in lane
+ * units. Posts are roadside furniture, not lane markers: they sit just past the
+ * edge line on the side of their lane, offset by enough that the post's inner
+ * face touches the road rather than overlapping it. The lane the rope pulls the
+ * car into is still `laneX(anchor.lane)` — this is only where the post is.
+ */
+export function anchorX(lane: number, config: GameConfig): number {
+  return Math.sign(lane) * (config.road.halfWidth + config.road.anchorOffset);
+}
+
 export interface AnchorWindow {
   windowOpenS: number;
   windowCloseS: number;

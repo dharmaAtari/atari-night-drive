@@ -1,4 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 90">
-  <rect data-token="rearLightRed" fill="#ff2d3a" x="12" y="70" width="10" height="7" rx="2" />
-  <rect data-token="rearLightRed" fill="#ff2d3a" x="38" y="70" width="10" height="7" rx="2" />
+  <!-- Registered against car/body.svg: same viewBox, lights where the reference
+       puts them — 0.14 up the body, 0.22 of its width each. -->
+  <rect data-token="rearLight" fill="#ff2f3a" x="8" y="68.2" width="11" height="6.3" rx="1.6" />
+  <rect data-token="rearLight" fill="#ff2f3a" x="41" y="68.2" width="11" height="6.3" rx="1.6" />
 </svg>

@@ -1,13 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 120">
-  <path data-token="roadSurface" fill="#14171c" d="M140,20 L180,20 L250,118 L70,118 Z" />
-  <path data-token="roadShoulder" fill="#24282f" d="M136,20 L140,20 L70,118 L56,118 Z" />
-  <path data-token="roadShoulder" fill="#24282f" d="M180,20 L184,20 L264,118 L250,118 Z" />
-  <g data-token="laneMarking" fill="#9aa4b2" fill-opacity="0.75">
+  <!-- The game in one image: a road running to a vanishing point, a cone of warm
+       light on it, and one lit post standing off the edge. Every colour is a
+       token; nothing here is invented. -->
+  <path data-token="roadFill" fill="#171a22" d="M140,20 L180,20 L250,118 L70,118 Z" />
+  <path data-token="shoulder" fill="#101219" d="M136,20 L140,20 L70,118 L56,118 Z" />
+  <path data-token="shoulder" fill="#101219" d="M180,20 L184,20 L264,118 L250,118 Z" />
+  <g data-token="laneMark" fill="#8c93a8" fill-opacity="0.75">
     <path d="M158,34 L162,34 L162,44 L158,44 Z" />
     <path d="M157,58 L163,58 L164,74 L156,74 Z" />
     <path d="M155,88 L165,88 L167,114 L153,114 Z" />
   </g>
-  <path data-token="headlightGlow" fill="#ffb454" fill-opacity="0.12" d="M160,118 L126,26 L194,26 Z" />
-  <rect data-token="anchorDormant" fill="#4fb8c9" x="238" y="46" width="4" height="60" rx="2" />
-  <circle data-token="anchorOpen" fill="#eafcff" cx="240" cy="40" r="9" />
+  <path data-token="headlight" fill="#ffce8c" fill-opacity="0.13" d="M160,118 L126,26 L194,26 Z" />
+  <rect data-token="anchorDim" fill="#2d6b78" x="238" y="52" width="5" height="54" />
+  <rect data-token="anchorActive" fill="#7ef2ff" x="235" y="42" width="11" height="10" />
 </svg>

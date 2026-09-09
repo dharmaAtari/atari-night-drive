@@ -1,8 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 90">
-  <rect data-token="carBody" fill="#3c4550" x="10" y="6" width="40" height="72" rx="9" />
-  <rect data-token="carBody" fill="#3c4550" fill-opacity="0.6" x="18" y="14" width="24" height="30" rx="6" />
-  <rect data-token="carBody" fill="#3c4550" x="4" y="60" width="10" height="22" rx="4" />
-  <rect data-token="carBody" fill="#3c4550" x="46" y="60" width="10" height="22" rx="4" />
-  <rect data-token="carBody" fill="#3c4550" x="4" y="10" width="10" height="20" rx="4" />
-  <rect data-token="carBody" fill="#3c4550" x="46" y="10" width="10" height="20" rx="4" />
+  <!-- Night Line's car, rear view: a rounded body, a roof panel a third darker,
+       and the front wheels peeking past the shoulders. Proportions are the
+       reference's — body 1 : 1.4, roof 0.68 wide, wheels at 0.72 up the body. -->
+  <ellipse data-token="carShadow" fill="#05070c" fill-opacity="0.6" cx="30" cy="84" rx="29.5" ry="6" />
+  <rect data-token="carWheel" fill="#0b0d13" x="0" y="22.4" width="7.5" height="10.5" rx="1.5" />
+  <rect data-token="carWheel" fill="#0b0d13" x="52.5" y="22.4" width="7.5" height="10.5" rx="1.5" />
+  <rect data-token="carBody" fill="#aeb8cf" x="5" y="8" width="50" height="70" rx="9" />
+  <rect data-token="carRoof" fill="#6c7691" x="13" y="17.8" width="34" height="30.8" rx="6" />
 </svg>

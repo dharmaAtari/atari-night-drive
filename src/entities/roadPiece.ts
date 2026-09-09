@@ -17,10 +17,10 @@ import { Depth } from './depths.js';
 
 /** Palette, from public/assets/tokens.json. */
 export const RoadColor = {
-  SURFACE: 0x14171c,
-  SHOULDER: 0x24282f,
-  LANE_MARKING: 0x9aa4b2,
-  NIGHT: 0x06080c,
+  SURFACE: 0x171a22,
+  SHOULDER: 0x101219,
+  LANE_MARKING: 0x8c93a8,
+  NIGHT: 0x04050a,
 } as const;
 
 function ribbon(name: string, color: number, depth: number): Entity {

@@ -1,4 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 120">
-  <rect data-token="pickupPower" fill="#6bffb0" x="8" y="30" width="4" height="90" rx="2" />
-  <path data-token="pickupPower" fill="#6bffb0" d="M10,0 L20,16 L10,32 L0,16 Z" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 120">
+  <!-- A power pickup is an anchor in the pickup colour wearing a ring. Same post,
+       same lamp, so it is still obviously throwable; the ring is the only thing
+       that says taking it buys headlight. -->
+  <defs>
+    <radialGradient id="bloomPower" cx="20" cy="14.2" r="19" gradientUnits="userSpaceOnUse">
+      <stop data-token="pickupPower" offset="0" stop-color="#ffd166" stop-opacity="0.55" />
+      <stop data-token="pickupPower" offset="0.5" stop-color="#ffd166" stop-opacity="0.22" />
+      <stop data-token="pickupPower" offset="1" stop-color="#ffd166" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <circle data-token="pickupPower" fill="url(#bloomPower)" cx="20" cy="14.2" r="19" />
+  <rect data-token="pickupPower" fill="#ffd166" x="16.6" y="17" width="6.8" height="103" />
+  <rect data-token="pickupPower" fill="#ffd166" x="10.82" y="6.1" width="18.36" height="16.32" />
+  <circle data-token="pickupPower" fill="none" stroke="#ffd166" stroke-opacity="0.9" stroke-width="3.4" cx="20" cy="63.4" r="15" />
 </svg>

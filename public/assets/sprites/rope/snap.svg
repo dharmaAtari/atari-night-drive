@@ -1,5 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
-  <g data-token="obstacleWarning" fill="#ff5a1f">
+  <!-- The snap: the rope's strain colour, thrown apart. Warm orange rather than
+       hazard red — the rope breaking is your mistake, not something on the road. -->
+  <g data-token="ropeStrain" fill="#ff8a5c">
     <path d="M19,20 L4,7 L9,20 L2,31 Z" />
     <path d="M21,20 L36,7 L31,20 L38,31 Z" />
     <path d="M20,2 L23,14 L17,14 Z" />

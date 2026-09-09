@@ -1,10 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 200">
+  <!-- Two beams thrown from the lamps on the nose, plus the wide weak spill that
+       keeps the beam edge from being a hard line. One warm colour throughout —
+       the reference lights everything with rgb(255,206,140) and varies only alpha. -->
   <defs>
-    <linearGradient id="coneGrad" x1="60" y1="200" x2="60" y2="0" gradientUnits="userSpaceOnUse">
-      <stop data-token="headlightCore" offset="0" stop-color="#fff2c9" stop-opacity="0.85" />
-      <stop data-token="headlightGlow" offset="0.4" stop-color="#ffb454" stop-opacity="0.35" />
-      <stop data-token="headlightGlow" offset="1" stop-color="#ffb454" stop-opacity="0" />
+    <linearGradient id="beam" x1="60" y1="200" x2="60" y2="0" gradientUnits="userSpaceOnUse">
+      <stop data-token="headlight" offset="0" stop-color="#ffce8c" stop-opacity="0.55" />
+      <stop data-token="headlight" offset="0.42" stop-color="#ffce8c" stop-opacity="0.34" />
+      <stop data-token="headlight" offset="1" stop-color="#ffce8c" stop-opacity="0" />
+    </linearGradient>
+    <linearGradient id="spill" x1="60" y1="200" x2="60" y2="0" gradientUnits="userSpaceOnUse">
+      <stop data-token="headlight" offset="0" stop-color="#ffce8c" stop-opacity="0.18" />
+      <stop data-token="headlight" offset="0.7" stop-color="#ffce8c" stop-opacity="0.08" />
+      <stop data-token="headlight" offset="1" stop-color="#ffce8c" stop-opacity="0" />
     </linearGradient>
   </defs>
-  <path data-token="headlightGlow" fill="url(#coneGrad)" d="M55,200 L10,0 L110,0 L65,200 Z" />
+  <path data-token="headlight" fill="url(#spill)" d="M50,200 L0,0 L120,0 L70,200 Z" />
+  <path data-token="headlight" fill="url(#beam)" d="M48,200 L2,0 L54,0 L56,200 Z" />
+  <path data-token="headlight" fill="url(#beam)" d="M64,200 L66,0 L118,0 L72,200 Z" />
 </svg>

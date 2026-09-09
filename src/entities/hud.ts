@@ -14,12 +14,14 @@ import Entity from './Entity.js';
 import { Shape, ShapeKind, Sprite, Text, TextAlign, Transform } from '../components/index.js';
 import { Depth } from './depths.js';
 
+/** Palette, from public/assets/tokens.json. */
 export const HudColor = {
-  POWER_FILL: 0xffcc66,
-  HIGH_BEAM_FILL: 0x8f7bff,
+  /** The warm of the headlight itself: the bar reads as the light it measures. */
+  POWER_FILL: 0xffce8c,
+  HIGH_BEAM_FILL: 0xc08cff,
   /** Reserved for obstacles and the low-power warning. Nothing else. */
-  WARNING: 0xff5a1f,
-  TEXT: '#d8d8d8',
+  WARNING: 0xff4a35,
+  TEXT: '#e8f1ff',
   /**
    * The countdown digits borrow the open anchor's white and cyan: the same
    * "this is the thing to look at" the game teaches a moment later.

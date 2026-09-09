@@ -4,7 +4,7 @@
  * Three causes, checked in the order they can occur within a frame:
  *
  *   snap      the rope was held past its limit — already decided by RopeSystem
- *   offRoad   a curve went untaken and drift carried the car off the surface
+ *   offRoad   a curve went untaken and drift carried the car into the edge
  *   obstacle  something was still in the car's lane when it arrived
  *
  * The car's footprint comes from its `Collision` component rather than a
@@ -19,6 +19,21 @@
 import type { CollisionComponent } from '../components/index.js';
 import { CrashCause, GameEvent, RunState, hazardLanes, type CrashCauseValue, type World } from '../world.js';
 import { RopeState } from '../world.js';
+
+/**
+ * True when the car's lateral footprint has crossed either edge of the road.
+ *
+ * Tested against the car's near edge, not its centre: the run ends the moment
+ * a wheel leaves the surface, which is what the player sees. Waiting for the
+ * centre to pass would let the car sit visibly half off the road, still alive.
+ */
+export function carIsOffRoad(
+  carX: number,
+  carHalfWidth: number,
+  roadHalfWidth: number,
+): boolean {
+  return Math.abs(carX) + carHalfWidth > roadHalfWidth;
+}
 
 /**
  * True when the car's lateral footprint overlaps the given lane's footprint.
@@ -65,7 +80,7 @@ export function collisionSystem(world: World, collider: CollisionComponent): boo
   let cause: CrashCauseValue | null = null;
   if (world.rope.state === RopeState.SNAPPED) {
     cause = CrashCause.SNAP;
-  } else if (Math.abs(world.car.x) > world.config.road.halfWidth) {
+  } else if (carIsOffRoad(world.car.x, carHalfWidth, world.config.road.halfWidth)) {
     cause = CrashCause.OFF_ROAD;
   } else if (hitsObstacle(world, carHalfWidth)) {
     cause = CrashCause.OBSTACLE;
