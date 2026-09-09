@@ -22,7 +22,7 @@ export function ropeLine(): Entity {
           { x: 0, y: 0 },
         ],
         fillColor: null,
-        strokeColor: 0xd8d8d8,
+        strokeColor: 0xa8ecff,
         strokeWidth: 2,
         originX: 0,
         originY: 0,

@@ -47,9 +47,14 @@ const MAX_POSTS = 72;
 const MAX_OBSTACLES = 24;
 const MAX_ANCHORS = 24;
 
-/** On-screen heights, as a fraction of the road's projected half-width. */
-const POST_HEIGHT_RATIO = 0.1;
-const ANCHOR_HEIGHT_RATIO = 0.34;
+/**
+ * On-screen heights, as a fraction of the road's projected half-width. Both are
+ * the reference build's: a roadside post stands 0.34 of the half-width, an
+ * anchor 0.62 to the top of its bar. The anchor art carries its lamp above that
+ * bar, so the sprite is scaled to 0.72 for the bar itself to land on 0.62.
+ */
+const POST_HEIGHT_RATIO = 0.34;
+const ANCHOR_HEIGHT_RATIO = 0.72;
 
 /** How fast an open anchor pulses, in cycles per second. The tutorial. */
 const ANCHOR_PULSE_HZ = 3;
@@ -57,8 +62,8 @@ const ANCHOR_PULSE_HZ = 3;
 /** Attach/snap burst width, as a fraction of the road's half-width where it lands. */
 const FLASH_WIDTH_RATIO = 0.5;
 
-const ROPE_COLOR = 0xd8d8d8;
-const ROPE_WARNING_COLOR = 0xff5a1f;
+const ROPE_COLOR = 0xa8ecff;
+const ROPE_WARNING_COLOR = 0xff8a5c;
 /** Tension below this draws a calm rope; above it the warning ramps in. */
 const ROPE_TENSION_WARN = 0.6;
 

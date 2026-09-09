@@ -5,7 +5,7 @@
     "scaleMode": "resize",
     "autoCenter": true,
     "fullscreen": false,
-    "backgroundColor": "#06080c",
+    "backgroundColor": "#04050a",
     "pixelArt": false,
     "maxDevicePixelRatio": 2,
     "portraitBreakpoint": 1.0
@@ -23,19 +23,19 @@
       "car.rearLights":      { "file": "assets/sprites/car/rear-lights.svg",      "scale": 3 },
       "car.headlightCone":   { "file": "assets/sprites/car/headlight-cone.svg",   "scale": 4 },
 
-      "anchor.dormant":      { "file": "assets/sprites/anchor/post.svg",          "scale": 2 },
-      "anchor.open":         { "file": "assets/sprites/anchor/post-open.svg",     "scale": 2 },
-      "anchor.attached":     { "file": "assets/sprites/anchor/post-attached.svg", "scale": 2 },
-      "anchor.pickupPower":  { "file": "assets/sprites/anchor/pickup-power.svg",  "scale": 2 },
-      "anchor.pickupHighBeam": { "file": "assets/sprites/anchor/pickup-highbeam.svg", "scale": 2 },
+      "anchor.dormant":      { "file": "assets/sprites/anchor/post.svg",          "scale": 3 },
+      "anchor.open":         { "file": "assets/sprites/anchor/post-open.svg",     "scale": 3 },
+      "anchor.attached":     { "file": "assets/sprites/anchor/post-attached.svg", "scale": 3 },
+      "anchor.pickupPower":  { "file": "assets/sprites/anchor/pickup-power.svg",  "scale": 3 },
+      "anchor.pickupHighBeam": { "file": "assets/sprites/anchor/pickup-highbeam.svg", "scale": 3 },
 
-      "obstacle.stalled":    { "file": "assets/sprites/obstacle/stalled.svg",     "scale": 3 },
-      "obstacle.barrier":    { "file": "assets/sprites/obstacle/barrier.svg",     "scale": 3 },
-      "obstacle.pothole":    { "file": "assets/sprites/obstacle/pothole.svg",     "scale": 3 },
-      "obstacle.pedestrian": { "file": "assets/sprites/obstacle/pedestrian.svg",  "scale": 3 },
-      "obstacle.debris":     { "file": "assets/sprites/obstacle/debris.svg",      "scale": 3 },
+      "obstacle.stalled":    { "file": "assets/sprites/obstacle/stalled.svg",     "scale": 5 },
+      "obstacle.barrier":    { "file": "assets/sprites/obstacle/barrier.svg",     "scale": 5 },
+      "obstacle.pothole":    { "file": "assets/sprites/obstacle/pothole.svg",     "scale": 5 },
+      "obstacle.pedestrian": { "file": "assets/sprites/obstacle/pedestrian.svg",  "scale": 5 },
+      "obstacle.debris":     { "file": "assets/sprites/obstacle/debris.svg",      "scale": 5 },
 
-      "road.reflectorPost":  { "file": "assets/sprites/road/reflector-post.svg",  "scale": 2 },
+      "road.reflectorPost":  { "file": "assets/sprites/road/reflector-post.svg",  "scale": 3 },
 
       "rope.attachFlash":    { "file": "assets/sprites/rope/attach-flash.svg",    "scale": 2 },
       "rope.snap":           { "file": "assets/sprites/rope/snap.svg",            "scale": 3 },
@@ -48,7 +48,7 @@
     "animations": {
       "obstacle.pedestrianWalk": {
         "file": "assets/sprites/obstacle/pedestrian-walk.svg",
-        "scale": 3,
+        "scale": 5,
         "frameCount": 4,
         "frameRate": 8,
         "loop": true
@@ -75,7 +75,7 @@
     "width": 1
   },
   "road": {
-    "halfWidth": 1.5,
+    "halfWidth": 1.8,
     "anchorOffset": 0.06,
     "horizonMetres": 300,
     "tailMetres": 10,

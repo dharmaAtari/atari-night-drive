@@ -1,4 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 16">
-  <rect data-token="laneMarking" fill="none" stroke="#9aa4b2" stroke-opacity="0.55" stroke-width="2" x="1" y="1" width="118" height="14" rx="3" />
-  <rect data-token="baseNight" fill="#06080c" fill-opacity="0.55" x="3" y="3" width="114" height="10" rx="2" />
+  <!-- The reference's meter: a barely-there well and a one-pixel edge. The HUD
+       must not light the frame up — the dark is the game. -->
+  <rect data-token="hudDim" fill="#d6e4ff" fill-opacity="0.07" x="0" y="0" width="120" height="16" />
+  <rect data-token="hudDim" fill="none" stroke="#d6e4ff" stroke-opacity="0.13" stroke-width="1" x="0.5" y="0.5" width="119" height="15" />
 </svg>

@@ -92,7 +92,19 @@ export interface LanesConfig {
 }
 
 export interface RoadConfig {
+  /**
+   * Half the drivable surface, in lane units. Deliberately wider than the lanes
+   * it carries (`lanes.count * lanes.width / 2` = 1.5): the surplus is shoulder,
+   * and it is what stops a car roped out to an outer lane from looking like it
+   * is riding the edge. Every view that reads this divides by it, so widening
+   * the road widens the ribbon without touching lane width.
+   *
+   * It is also the off-road kill line — see `carIsOffRoad` — so the shoulder is
+   * the margin a roped swing has before the run ends. Do not shrink it to 1.5.
+   */
   halfWidth: number;
+  /** How far past the road edge an anchor post stands, in lane units. */
+  anchorOffset: number;
   horizonMetres: number;
   tailMetres: number;
   segmentLength: number;
@@ -298,7 +310,7 @@ export async function loadConfig(
       scaleMode: scaleMode(display.scaleMode),
       autoCenter: bool(display.autoCenter, true),
       fullscreen: bool(display.fullscreen, false),
-      backgroundColor: str(display.backgroundColor, '#06080c'),
+      backgroundColor: str(display.backgroundColor, '#04050a'),
       pixelArt: bool(display.pixelArt, false),
       maxDevicePixelRatio: num(display.maxDevicePixelRatio, 2),
       portraitBreakpoint: num(display.portraitBreakpoint, 1),
@@ -321,7 +333,8 @@ export async function loadConfig(
       width: num(lanes.width, 1),
     },
     road: {
-      halfWidth: num(road.halfWidth, 1.5),
+      halfWidth: num(road.halfWidth, 1.8),
+      anchorOffset: num(road.anchorOffset, 0.06),
       horizonMetres: num(road.horizonMetres, 300),
       tailMetres: num(road.tailMetres, 10),
       segmentLength: num(road.segmentLength, 5),

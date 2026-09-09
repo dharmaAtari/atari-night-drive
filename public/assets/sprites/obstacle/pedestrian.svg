@@ -1,4 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 60">
-  <circle data-token="obstacleWarning" fill="#ff5a1f" cx="12" cy="9" r="8" />
-  <path data-token="obstacleWarning" fill="#ff5a1f" d="M4,24 C4,18 20,18 20,24 L18,50 L14,50 L13,34 L11,34 L10,50 L6,50 Z" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 27">
+  <!-- Pedestrians, in the reference's warm off-white rather than hazard red: they move, and a colour reserved for things that do not would lie. Two of them spread across the lane at 0.2 and 0.8 of its span, exactly as it draws them. -->
+  <g data-token="ped" fill="#ffe6c4">
+    <circle cx="8.00" cy="4.40" r="1.80" />
+    <rect x="5.80" y="7.00" width="4.40" height="14.40" />
+    <rect x="6.24" y="21.00" width="1.54" height="4.50" />
+    <rect x="8.22" y="21.00" width="1.54" height="4.50" />
+    <circle cx="32.00" cy="4.40" r="1.80" />
+    <rect x="29.80" y="7.00" width="4.40" height="14.40" />
+    <rect x="30.24" y="21.00" width="1.54" height="4.50" />
+    <rect x="32.22" y="21.00" width="1.54" height="4.50" />
+  </g>
 </svg>

@@ -1,4 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 120">
-  <rect data-token="anchorDormant" fill="#4fb8c9" x="8" y="20" width="4" height="100" rx="2" />
-  <circle data-token="anchorDormant" fill="#4fb8c9" cx="10" cy="14" r="10" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 120">
+  <!-- Dormant anchor: a bare post, exactly as the reference draws it. It carries
+       no lamp at all — the lamp IS the throw window, and the whole tutorial is
+       that one of these lights up. Bar is 0.035 of the road half-width by 0.62
+       tall, the reference's proportions, at this viewBox's scale. -->
+  <rect data-token="anchorDim" fill="#2d6b78" x="16.6" y="17" width="6.8" height="103" />
 </svg>

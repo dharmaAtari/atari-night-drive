@@ -101,7 +101,11 @@ rope's taut hum is still synthesised, because its pitch has to glide with live t
 
 - `public/assets/tokens.json` — the colour source. Every SVG sets a literal hex **and**
   carries `data-token="<name>"` on the same element, so a re-theme is one file plus a
-  rewrite pass, with no SVG hand-edited.
+  rewrite pass, with no SVG hand-edited. The palette and the art are ported from the
+  Night Line reference build (`night-line.html`, `00-tokens.js` and `09-render.js`):
+  token names, hexes and the drawables' proportions are that file's, so a change there
+  can be brought across by name. Code that draws rather than blits — `RoadColor`,
+  `HudColor`, the rope's stroke — reads the same tokens and must move with them.
 - `public/assets/sprites/{car,anchor,obstacle,road,rope,ui}/` — one file per asset
 - `public/assets/sounds/` — one MP3 per cue, mapped in `config.audio.sounds`
 
