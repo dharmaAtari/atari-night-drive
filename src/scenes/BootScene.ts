@@ -1,9 +1,10 @@
 /**
  * BootScene — loads every asset the config names, then hands over to the menu.
  *
- * Nothing else in the game loads anything. Systems ask for textures by logical
- * key ('car.body'), and the only place a key is tied to a file is
- * `config.assets`, which means re-skinning is a config edit and no code change.
+ * Nothing else in the game loads anything. Systems ask for textures and sounds
+ * by logical key ('car.body', 'rope.throw'), and the only places a key is tied
+ * to a file are `config.assets` and `config.audio.sounds`, which means
+ * re-skinning or re-voicing is a config edit and no code change.
  *
  * Art ships as SVG and is rasterised once here, at a size chosen per asset. That
  * is a deliberate trade: the animation model is transform-only — states are
@@ -40,6 +41,13 @@ export default class BootScene extends Phaser.Scene {
 
     for (const [key, asset] of Object.entries(this.config.assets.animations)) {
       this.load.svg(key, `${base}${asset.file}`, { scale: asset.scale });
+    }
+
+    // Sounds follow the same rule as sprites: the only place a key meets a
+    // file is `config.audio.sounds`. `AudioSystem` checks the cache before
+    // playing, so a missing sound costs one cue, not the soundtrack.
+    for (const [key, file] of Object.entries(this.config.audio.sounds)) {
+      this.load.audio(key, `${base}${file}`);
     }
 
     this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: Phaser.Loader.File) => {

@@ -73,7 +73,9 @@ export function createHazardSpawnSystem(seed: number): HazardSpawnSystem {
 
     run(world: World, difficulty: number): void {
       const { config, car } = world;
-      if (world.run.state !== RunState.RUNNING) return;
+      // Spawning runs through the countdown too, so the road is populated
+      // before the car moves and the player can see what is coming.
+      if (world.run.state !== RunState.RUNNING && world.run.state !== RunState.COUNTDOWN) return;
 
       const target = car.s + spawnLead(config, car.speed);
       let emitted = 0;

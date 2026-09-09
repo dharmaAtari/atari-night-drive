@@ -78,7 +78,10 @@ export interface AssetsConfig {
 
 export interface AudioConfig {
   volume: number;
-  /** logical sound name -> filename under public/assets/sounds/ */
+  /**
+   * logical sound key ('rope.throw') -> file path under public/, like sprites.
+   * Systems ask for sounds by key only, so a re-voice is a config edit.
+   */
   sounds: Record<string, string>;
 }
 
@@ -153,6 +156,11 @@ export interface LightConfig {
   highBeamDrainPerSecond: number;
 }
 
+export interface StartConfig {
+  /** the 3-2-1 before a run, in seconds. 0 skips it. */
+  countdownSeconds: number;
+}
+
 export interface GameConfig {
   display: DisplayConfig;
   performance: PerformanceConfig;
@@ -168,6 +176,7 @@ export interface GameConfig {
   curves: CurvesConfig;
   hazards: HazardsConfig;
   light: LightConfig;
+  start: StartConfig;
   score: { pointsPerSecond: number };
   fail: { impactSeconds: number };
   debug: { autoCentre: boolean; showSeed: boolean };
@@ -277,6 +286,7 @@ export async function loadConfig(
   const hazards = obj(raw.hazards);
   const pickupChance = obj(hazards.pickupChance);
   const light = obj(raw.light);
+  const start = obj(raw.start);
   const score = obj(raw.score);
   const fail = obj(raw.fail);
   const debug = obj(raw.debug);
@@ -376,6 +386,7 @@ export async function loadConfig(
       powerPickup: num(light.powerPickup, 0.35),
       highBeamDrainPerSecond: num(light.highBeamDrainPerSecond, 0.25),
     },
+    start: { countdownSeconds: Math.max(0, num(start.countdownSeconds, 3)) },
     score: { pointsPerSecond: num(score.pointsPerSecond, 1) },
     fail: { impactSeconds: num(fail.impactSeconds, 0.6) },
     debug: {
