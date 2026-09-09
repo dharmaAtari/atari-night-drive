@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">
+  <g data-token="obstacleWarning" fill="#ff5a1f">
+    <path d="M19,20 L4,7 L9,20 L2,31 Z" />
+    <path d="M21,20 L36,7 L31,20 L38,31 Z" />
+    <path d="M20,2 L23,14 L17,14 Z" />
+    <path d="M20,38 L23,26 L17,26 Z" />
+  </g>
+</svg>

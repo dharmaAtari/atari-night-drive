@@ -7,6 +7,10 @@
  *   update()  device input -> entity input -> animation -> scene logic
  *   render()  entity components -> Phaser game objects
  *
+ * Two device systems write that one `UserInput` — keyboard and pointer — and no
+ * gameplay code learns which was used. That is the whole reason for the split:
+ * touch support cost one system and zero changes anywhere else.
+ *
  * The order in `update()` is the important part. Device state is read once per
  * frame, fanned out to every entity that carries a `UserInput`, and only then
  * does scene logic run — so by the time a scene looks at an entity's input, it
@@ -40,8 +44,13 @@ import Entity from '../entities/Entity.js';
 import { UserInput, type UserInputComponent } from '../components/index.js';
 import RenderSystem from '../systems/RenderSystem.js';
 import KeyboardInputSystem from '../systems/KeyboardInputSystem.js';
+import PointerInputSystem from '../systems/PointerInputSystem.js';
 import UserInputSystem from '../systems/UserInputSystem.js';
 import AnimationSystem from '../systems/AnimationSystem.js';
+import type { GameConfig } from '../config.js';
+
+/** Fallback edge guard when the scene starts before config reaches the registry. */
+const DEFAULT_EDGE_GUARD_PX = 24;
 
 export default abstract class BaseScene extends Phaser.Scene {
   entities: Entity[] = [];
@@ -54,14 +63,24 @@ export default abstract class BaseScene extends Phaser.Scene {
 
   protected renderSystem!: RenderSystem;
   protected keyboardInputSystem!: KeyboardInputSystem;
+  protected pointerInputSystem!: PointerInputSystem;
   protected userInputSystem!: UserInputSystem;
   protected animationSystem!: AnimationSystem;
+
+  /** The parsed config, put in the registry by `main.ts` before the game starts. */
+  protected get gameConfig(): GameConfig {
+    return this.game.registry.get('config') as GameConfig;
+  }
 
   create(): void {
     this.entities = [];
 
     this.renderSystem = new RenderSystem(this);
     this.keyboardInputSystem = new KeyboardInputSystem();
+    this.pointerInputSystem = new PointerInputSystem(
+      this,
+      this.gameConfig?.input.edgeGuardPx ?? DEFAULT_EDGE_GUARD_PX,
+    );
     this.userInputSystem = new UserInputSystem();
     this.animationSystem = new AnimationSystem();
 
@@ -73,6 +92,7 @@ export default abstract class BaseScene extends Phaser.Scene {
     // Adopt whatever is already held (the button that started this scene, most
     // likely) so the first frame does not read it as a fresh press.
     this.keyboardInputSystem.prime(this.userInput);
+    this.pointerInputSystem.prime(this.userInput);
 
     this.render();
 
@@ -113,7 +133,10 @@ export default abstract class BaseScene extends Phaser.Scene {
 
   /** Called by Phaser once per frame. */
   override update(time: number, delta: number): void {
+    // Device systems first, both writing the same component. Pointer runs after
+    // the keyboard and owns the resulting `action` edges — see PointerInputSystem.
     this.keyboardInputSystem.update(this.userInput);
+    this.pointerInputSystem.update(this.userInput);
     this.userInputSystem.update(this.entities, this.userInput);
     this.animationSystem.update(this.entities, delta);
     this.updateEntities(time, delta);

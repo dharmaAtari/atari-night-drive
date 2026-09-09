@@ -1,6 +1,22 @@
 # Atari Night Drive
 
-A 2D night-driving game built with **Phaser 4**, TypeScript and Vite.
+A one-button endless night-driving game built with **Phaser 4**, TypeScript and Vite.
+Descended from Atari's *Night Driver* (1976), whose roadside reflector posts become the
+thing you survive by.
+
+**The verb:** the car drives itself. Press space to throw a rope at a lit anchor post and
+swing into its lane, past whatever is about to kill you. Three timing skills out of one key
+— when to press, how long to hold, when to let go — and three ways to die: hit the obstacle,
+return to centre too early, or hold until the rope reaches its extent and snaps.
+
+Headlight power drains continuously and decides how far ahead you can see, so **visibility
+is the difficulty curve**. It must always make the game *later*, never impossible: the
+reaction window has a floor that low power can never push below. That property is the best
+thing about the design and the easiest to break — see `AnchorSystem.ropeRange` and
+`LightSystem.glowRadius`.
+
+`docs/` in the reference project carries the full GDD; the rules that matter are documented
+at the top of the system that enforces them.
 
 ## Toolchain
 
@@ -22,6 +38,8 @@ directory.
 | `make dev` | dev server on `http://localhost:8000/` |
 | `make build` | typecheck, then build into `dist/` |
 | `make preview` | **builds first**, then serves `dist/` — never a stale build |
+| `make playtest` | boots the game headless in Chromium and asserts it plays |
+| `make verify` | typecheck + build + playtest, the full gate |
 | `make typecheck` | `tsc --noEmit` |
 | `make clean` / `make distclean` | drop `dist/` / also drop `node_modules` |
 
@@ -34,14 +52,27 @@ Gameplay logic is split Entity–Component–System so that **input handling sta
 gameplay code**. This is the load-bearing reason for the architecture; preserve it.
 
 - `src/entities/` — factories that assemble an entity from components. No behaviour.
-- `src/components/` — pure data containers. No logic, no methods. Keep them small and
-  single-purpose. Today: `Transform`, `Shape`, `Text`, `Collision`, `UserInput`,
-  `Animation` — all re-exported from `src/components/index.ts`, which also holds the
-  `ComponentMap` that makes `entity.get(TRANSFORM)` come back typed.
-- `src/systems/` — all behaviour. Each system queries the entities holding the components
-  it cares about and updates them once per frame.
+- `src/components/` — pure data containers. No logic, no methods. Everything here is
+  **generic and visual**: `Transform`, `Shape`, `Sprite`, `Text`, `Collision`, `UserInput`,
+  `Animation`, re-exported from `src/components/index.ts` along with the `ComponentMap`
+  that makes `entity.get(TRANSFORM)` come back typed.
+
+  There are deliberately **no components named after game objects**. A car is an entity
+  built from `Transform` + `Sprite` + `Animation`, never a `Car` component. If you find
+  yourself writing one, what you want is an entity factory.
+- `src/world.ts` — gameplay state that has no transform and therefore is not a component:
+  track curvature, headlight power, rope state machine, run state, the anchor and hazard
+  records. Plain data, owned by the scene, handed to systems. **Imports nothing from
+  Phaser** — the world is metres and seconds, never pixels.
+- `src/systems/` — all behaviour, in two layers. Gameplay systems read and write the world
+  (`RopeSystem`, `HazardGenerator`, `CollisionSystem`, …) and are testable with no canvas.
+  View systems (`RoadViewSystem`, `ActorViewSystem`, `HudViewSystem`) read the world and
+  write component values onto entities; `RenderSystem` then draws entities and nothing else.
 - `src/scenes/` — Phaser scenes (boot, menu, play). Scenes wire systems together; they do
-  not contain gameplay rules.
+  not contain gameplay rules. If a rule lands in `GameScene`, it is in the wrong file.
+
+`CameraSystem` is the only place metres become pixels. Everything upstream of it is world
+units; everything downstream reads `world.projection`.
 
 Every input system writes to the same `UserInput` component, so gameplay systems never
 learn whether the player is on a keyboard, a touchscreen or a gamepad. Adding an input
@@ -49,17 +80,34 @@ method means adding one system and touching nothing else.
 
 ## Runtime config
 
-Tunables live in a config file loaded at runtime, not hardcoded in systems: display
-width/height, scale mode, fullscreen, target fps, and the logical-sound-name → file map
-(e.g. `"enginesound": "vroom.mp3"`). Systems read from config.
+Tunables live in `public/config.json`, loaded at runtime and never hardcoded in systems:
+display, target fps, input, and the whole gameplay tuning surface (`lanes`, `road`,
+`camera`, `speed`, `rope`, `curves`, `hazards`, `light`, `score`, `fail`). `src/config.ts`
+defaults every field, so a hand-edited config with a missing key still boots.
+
+`assets.sprites` maps a logical key (`'car.body'`) to an SVG and a rasterisation scale;
+`assets.animations` does the same for frame strips. Systems ask for textures by logical key
+only — the path appears exactly once, in the config — so re-skinning is a config edit.
+
+`audio.sounds` is empty on purpose: every sound is synthesised in `AudioSystem`, which is
+why there are no files under `public/assets/sounds/`.
 
 ## Assets
 
-`public/assets/` — served as static files by Vite.
+`public/assets/` — served as static files by Vite. Art is SVG, rasterised once at load.
 
-- `public/assets/sounds/` — audio referenced by the config's sound map
-- `public/assets/sprites/` — static sprite images
-- `public/assets/sprites/animations/` — spritesheets and animation frame sets
+- `public/assets/tokens.json` — the colour source. Every SVG sets a literal hex **and**
+  carries `data-token="<name>"` on the same element, so a re-theme is one file plus a
+  rewrite pass, with no SVG hand-edited.
+- `public/assets/sprites/{car,anchor,obstacle,road,rope,ui}/` — one file per asset
+- `public/assets/sounds/` — empty; audio is synthesised, not loaded
+
+**No sprite atlas, on purpose.** Animation is transform-only — states come from scaling,
+rotating and fading art, never from morphing paths — so there are no per-frame pixel
+differences an atlas could store, and it would only add download size and blur at
+non-native scale. The one real sheet is the pedestrian walk cycle, authored as four cells
+in a single SVG; `BootScene` slices the rasterised texture into frames by hand, which is
+what lets `AnimationSystem` drive it.
 
 ## Phaser 4 API drift
 
@@ -130,13 +178,28 @@ Intended loop: brainstorm → gdd → new → build → playtest → release →
 
 ## Verification
 
-Compiling is not working. `/phaser-playtest` boots the game headless in Chromium and
-asserts it actually runs — that is the real check before claiming a change works.
-
-The harness needs Playwright, installed once per project:
+Compiling is not working. Two harnesses exist, and both should be green before claiming a
+gameplay change works:
 
 ```bash
-npm install -D playwright && npx playwright install chromium
+npm run playtest   # or: make playtest — needs `npm run dev` already running
+npm run verify     # typecheck + build + playtest
+```
+
+`scripts/playtest.mjs` boots the real game in Chromium, drives an autopilot through real key
+events, and asserts the car travels, the rope attaches, power drains, the frame rate holds
+and the console is clean. Screenshots land in `docs/verification/`.
+
+Gameplay systems are Phaser-free by design, so they can also be simulated headlessly at
+thousands of frames a second — that is how the fairness invariants (no hazard blocking all
+three lanes, every hazard reachable by an anchor, no throw window below the reaction floor)
+are checked across many seeds. Prefer that for rule changes; it is far faster than a
+browser.
+
+Playwright is installed as a devDependency; the browser binary is per-machine:
+
+```bash
+npx playwright install chromium
 ```
 
 `src/main.ts` already exposes the game for deep checks, under a `DEV` guard so the handle

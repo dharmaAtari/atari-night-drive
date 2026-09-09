@@ -1,11 +1,18 @@
 /**
  * Phaser bootstrap.
  *
- * Reads public/config.json first, then starts the game with those settings so
- * the display size, frame rate and palette are all data-driven.
+ * Reads `public/config.json` before the game exists, so display size, frame rate
+ * and the whole asset manifest are data rather than code. The parsed config goes
+ * into the registry immediately, which is where every scene reads it from —
+ * nothing imports the loader a second time.
+ *
+ * Scene order is boot, menu, play: `BootScene` loads what the config names and
+ * then starts the menu, so no other scene ever has to check whether its textures
+ * arrived.
  */
 import Phaser from 'phaser';
 import { loadConfig } from './config.js';
+import BootScene from './scenes/BootScene.js';
 import MenuScene from './scenes/MenuScene.js';
 import GameScene from './scenes/GameScene.js';
 
@@ -24,11 +31,14 @@ async function boot(): Promise<Phaser.Game> {
       mode: display.scaleMode,
       autoCenter: display.autoCenter ? Phaser.Scale.CENTER_BOTH : Phaser.Scale.NO_CENTER,
     },
+    // One pointer is all a one-button game can use, and asking for more costs
+    // real work per frame on touch devices.
+    input: { activePointers: 1, gamepad: config.input.gamepad },
     fps: {
       target: performance.targetFps,
       forceSetTimeOut: true,
     },
-    scene: [MenuScene, GameScene],
+    scene: [new BootScene(config), MenuScene, GameScene],
   });
 
   // Reachable from any scene as `this.game.registry.get('config')`.

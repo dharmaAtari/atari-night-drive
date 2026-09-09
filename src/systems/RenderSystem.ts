@@ -6,18 +6,32 @@
  * changed fields onto the existing object — rebuilding them each frame would
  * thrash the display list.
  *
+ * Three kinds of visible component, each with its own view map so one entity can
+ * carry more than one:
+ *
+ *   Shape   vector primitives — the road ribbon, lane dashes, meter fills
+ *   Sprite  a loaded texture, addressed by the logical key it was loaded under
+ *   Text    score, prompts
+ *
  * Consequence worth knowing: a shape's `kind` and a circle's `radius` are read
  * once, at creation. Change those and you need a new entity. `Transform`,
- * colours, visibility, text content and rectangle size all sync every frame.
+ * colours, visibility, text content, rectangle size and — when `shape.dirty` is
+ * set — vertex geometry all sync every frame.
+ *
+ * Vertex geometry is behind `dirty` because pushing it re-triangulates the
+ * shape. The road rewrites its points every frame and says so; a static triangle
+ * uploads once and then costs nothing.
  */
 import Phaser from 'phaser';
 import type Entity from '../entities/Entity.js';
 import {
   TRANSFORM,
   SHAPE,
+  SPRITE,
   TEXT,
   ShapeKind,
   type ShapeComponent,
+  type SpriteComponent,
   type TextComponent,
   type TransformComponent,
 } from '../components/index.js';
@@ -25,10 +39,21 @@ import {
 /** The Phaser shape objects we build, all of which share the Shape base API. */
 type ShapeView = Phaser.GameObjects.Shape;
 
+/** Stand-in geometry for a polygon whose real points arrive on a later frame. */
+const PLACEHOLDER_POLYGON = [
+  { x: 0, y: 0 },
+  { x: 1, y: 0 },
+  { x: 0, y: 1 },
+];
+
 export default class RenderSystem {
   private readonly scene: Phaser.Scene;
   private readonly shapeViews = new Map<number, ShapeView>();
+  private readonly spriteViews = new Map<number, Phaser.GameObjects.Image>();
   private readonly textViews = new Map<number, Phaser.GameObjects.Text>();
+
+  /** Texture keys already reported as missing, so the warning fires once each. */
+  private readonly missingTextures = new Set<string>();
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -51,6 +76,23 @@ export default class RenderSystem {
         view.setVisible(entity.active && shape.visible);
       }
 
+      const sprite = entity.get(SPRITE);
+      if (sprite) {
+        let view = this.spriteViews.get(entity.id);
+        if (!view) {
+          const created = this.createSpriteView(sprite);
+          if (created) {
+            view = created;
+            this.spriteViews.set(entity.id, view);
+          }
+        }
+        if (view) {
+          this.applyTransform(view, transform);
+          this.applySprite(view, sprite);
+          view.setVisible(entity.active && sprite.visible);
+        }
+      }
+
       const text = entity.get(TEXT);
       if (text) {
         let view = this.textViews.get(entity.id);
@@ -68,16 +110,20 @@ export default class RenderSystem {
   /** Tear down every game object this system made. Call on scene shutdown. */
   destroy(): void {
     for (const view of this.shapeViews.values()) view.destroy();
+    for (const view of this.spriteViews.values()) view.destroy();
     for (const view of this.textViews.values()) view.destroy();
     this.shapeViews.clear();
+    this.spriteViews.clear();
     this.textViews.clear();
   }
 
   /** Drop the views for one entity, e.g. after `entity.destroy()`. */
   forget(entityId: number): void {
     this.shapeViews.get(entityId)?.destroy();
+    this.spriteViews.get(entityId)?.destroy();
     this.textViews.get(entityId)?.destroy();
     this.shapeViews.delete(entityId);
+    this.spriteViews.delete(entityId);
     this.textViews.delete(entityId);
   }
 
@@ -105,13 +151,40 @@ export default class RenderSystem {
         const [a = origin, b = origin, c = origin] = points;
         return add.triangle(0, 0, a.x, a.y, b.x, b.y, c.x, c.y, fill, shape.fillAlpha);
       }
-      case ShapeKind.POLYGON:
-        return add.polygon(0, 0, points.flatMap((p) => [p.x, p.y]), fill, shape.fillAlpha);
+      case ShapeKind.POLYGON: {
+        // Phaser triangulates on construction and dereferences the first vertex,
+        // so an empty point list throws rather than making an empty polygon.
+        // Shapes whose geometry is written by a system later (the road ribbon,
+        // the lane dashes) legitimately have none yet on the frame they are
+        // created, so they are seeded with a degenerate triangle and replaced
+        // on their first update — they are invisible until then either way.
+        const seed = points.length >= 3 ? points : PLACEHOLDER_POLYGON;
+        return add.polygon(0, 0, seed.flatMap((p) => [p.x, p.y]), fill, shape.fillAlpha);
+      }
       default: {
         const unreachable: never = shape.kind;
         throw new Error(`RenderSystem: unknown shape kind '${String(unreachable)}'`);
       }
     }
+  }
+
+  /**
+   * Null when the texture was never loaded. Returning rather than throwing keeps
+   * one missing asset from taking the whole scene down — Phaser would otherwise
+   * draw a green placeholder box, which reads as a rendering bug rather than a
+   * loading one. The warning names the key so it points at the config entry.
+   */
+  private createSpriteView(sprite: SpriteComponent): Phaser.GameObjects.Image | null {
+    if (!this.scene.textures.exists(sprite.texture)) {
+      if (!this.missingTextures.has(sprite.texture)) {
+        this.missingTextures.add(sprite.texture);
+        console.warn(
+          `RenderSystem: no texture '${sprite.texture}' — check config.assets.sprites`,
+        );
+      }
+      return null;
+    }
+    return this.scene.add.image(0, 0, sprite.texture);
   }
 
   private createTextView(text: TextComponent): Phaser.GameObjects.Text {
@@ -162,6 +235,11 @@ export default class RenderSystem {
       view.setStrokeStyle(shape.strokeWidth, shape.strokeColor, shape.strokeAlpha);
     }
 
+    if (shape.dirty) {
+      this.applyGeometry(view, shape);
+      shape.dirty = false;
+    }
+
     // Rectangles are the ones that get resized in practice (selection boxes,
     // bars). Other kinds keep the size they were created with. `setSize` lives
     // on Rectangle rather than the Shape base, hence the cast.
@@ -171,6 +249,52 @@ export default class RenderSystem {
     ) {
       (view as Phaser.GameObjects.Rectangle).setSize(shape.width, shape.height);
     }
+  }
+
+  /**
+   * Pushes changed vertices into the underlying geometry. Only the kinds built
+   * from `points` have anything to push; the rest are sized by width/height/
+   * radius and handled above.
+   */
+  private applyGeometry(view: ShapeView, shape: ShapeComponent): void {
+    const points = shape.points;
+
+    switch (shape.kind) {
+      case ShapeKind.LINE: {
+        const [a, b] = points;
+        if (a && b) (view as Phaser.GameObjects.Line).setTo(a.x, a.y, b.x, b.y);
+        break;
+      }
+      case ShapeKind.TRIANGLE: {
+        const [a, b, c] = points;
+        if (a && b && c) {
+          (view as Phaser.GameObjects.Triangle).setTo(a.x, a.y, b.x, b.y, c.x, c.y);
+        }
+        break;
+      }
+      case ShapeKind.POLYGON: {
+        // Fewer than three vertices is not a polygon; Earcut would be handed a
+        // degenerate path. Callers hide the shape instead of emptying it, so
+        // this only guards a shape mid-rebuild.
+        if (points.length >= 3) {
+          (view as Phaser.GameObjects.Polygon).setTo(points.map((p) => ({ x: p.x, y: p.y })));
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  private applySprite(view: Phaser.GameObjects.Image, sprite: SpriteComponent): void {
+    if (view.frame.name !== String(sprite.frame)) {
+      view.setFrame(sprite.frame);
+    }
+    view.setOrigin(sprite.originX, sprite.originY);
+    view.setAlpha(sprite.alpha);
+
+    if (sprite.tint === null) view.clearTint();
+    else view.setTint(sprite.tint);
   }
 
   private applyText(view: Phaser.GameObjects.Text, text: TextComponent): void {

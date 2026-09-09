@@ -20,10 +20,14 @@ import { SceneKey } from './keys.js';
 import type Entity from '../entities/Entity.js';
 import menuOption from '../entities/menuOption.js';
 import selectionBox from '../entities/selectionBox.js';
-import { TRANSFORM, USER_INPUT } from '../components/index.js';
+import titleMark from '../entities/titleMark.js';
+import { SPRITE, TRANSFORM, USER_INPUT } from '../components/index.js';
 
 /** Vertical gap between menu rows, in pixels. */
 const ROW_SPACING = 56;
+
+/** Title mark width, as a fraction of the canvas. */
+const TITLE_WIDTH_RATIO = 0.42;
 
 interface MenuRow {
   entity: Entity;
@@ -33,6 +37,7 @@ interface MenuRow {
 export default class MenuScene extends BaseScene {
   private rows: MenuRow[] = [];
   private box!: Entity;
+  private title!: Entity;
 
   /** Index into `rows` of the highlighted option. */
   private selected = 0;
@@ -42,6 +47,8 @@ export default class MenuScene extends BaseScene {
   }
 
   protected override build(): void {
+    this.title = this.addEntity(titleMark());
+
     // Positions are set by layout(), which also re-runs on resize.
     this.rows = [
       {
@@ -60,7 +67,9 @@ export default class MenuScene extends BaseScene {
 
   protected override layout(width: number, height: number): void {
     const centreX = width / 2;
-    const firstY = height / 2 - ROW_SPACING / 2;
+    const firstY = height / 2 + ROW_SPACING;
+
+    this.layoutTitle(centreX, height * 0.3, width);
 
     this.rows.forEach((row, index) => {
       const transform = row.entity.get(TRANSFORM);
@@ -70,6 +79,22 @@ export default class MenuScene extends BaseScene {
     });
 
     this.moveBoxToSelection();
+  }
+
+  /** Scales the mark to a fraction of the canvas, from its own texture size. */
+  private layoutTitle(centreX: number, y: number, width: number): void {
+    const transform = this.title.get(TRANSFORM);
+    const sprite = this.title.get(SPRITE);
+    if (!transform || !sprite) return;
+
+    transform.x = centreX;
+    transform.y = y;
+
+    if (!this.textures.exists(sprite.texture)) return;
+    const source = this.textures.get(sprite.texture).get(0);
+    const scale = source.width > 0 ? (width * TITLE_WIDTH_RATIO) / source.width : 1;
+    transform.scaleX = scale;
+    transform.scaleY = scale;
   }
 
   protected override updateEntities(): void {

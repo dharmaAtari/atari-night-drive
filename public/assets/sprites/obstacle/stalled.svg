@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 70">
+  <rect data-token="obstacleWarning" fill="#ff5a1f" x="4" y="8" width="32" height="54" rx="7" />
+  <rect data-token="obstacleWarning" fill="#ff5a1f" x="10" y="16" width="20" height="20" rx="4" />
+  <rect data-token="obstacleWarning" fill="#ff5a1f" x="0" y="46" width="8" height="16" rx="3" />
+  <rect data-token="obstacleWarning" fill="#ff5a1f" x="32" y="46" width="8" height="16" rx="3" />
+</svg>

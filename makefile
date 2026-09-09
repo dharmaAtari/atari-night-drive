@@ -4,7 +4,7 @@
 NPM  ?= npm
 PORT ?= 8000
 
-.PHONY: help all deps dev build preview typecheck clean distclean
+.PHONY: help all deps dev build preview playtest verify typecheck clean distclean
 
 help:
 	@echo "targets:"
@@ -31,6 +31,14 @@ build: | node_modules
 ## preview: serve the contents of dist/ as it will ship
 preview: build
 	$(NPM) run preview -- --port $(PORT)
+
+## playtest: boot the game headless in Chromium and assert it actually plays
+playtest: | node_modules
+	$(NPM) run playtest
+
+## verify: typecheck, build, then playtest -- the full gate
+verify: | node_modules
+	$(NPM) run verify
 
 ## typecheck: run tsc --noEmit without emitting a build
 typecheck: | node_modules

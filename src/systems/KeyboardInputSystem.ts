@@ -19,6 +19,13 @@
  * `JustDown`, which consumes the flag when read and so can only be asked once.
  * Deriving them here means `justDown` stays true for the whole frame no matter
  * how many entities look at it.
+ *
+ * Polling a set of held keys once a frame has one hole: a tap short enough to
+ * start and finish between two frames leaves nothing held at either sample, so
+ * the press vanishes. That is not hypothetical — it is what a fast player, and
+ * every synthetic key event in a test, actually produces. `tapped` closes it by
+ * latching every keydown until the next poll consumes it, so a press is never
+ * lost no matter how brief.
  */
 import {
   InputButton,
@@ -40,6 +47,14 @@ const BOUND_CODES = new Set(Object.values(KEY_BINDINGS).flat());
 
 /** Codes currently held, shared by every scene for the life of the page. */
 const pressed = new Set<string>();
+
+/**
+ * Codes pressed since the last poll, whether or not they are still held. Drained
+ * by `update`, so a tap that began and ended between two frames still reports as
+ * down for exactly one frame.
+ */
+const tapped = new Set<string>();
+
 let listening = false;
 
 function startListening(): void {
@@ -51,6 +66,7 @@ function startListening(): void {
     // Arrows and space scroll the page otherwise.
     event.preventDefault();
     pressed.add(event.code);
+    tapped.add(event.code);
   });
 
   window.addEventListener('keyup', (event) => {
@@ -59,7 +75,10 @@ function startListening(): void {
 
   // A key released while the tab is unfocused never reports its keyup, so it
   // would stay stuck down forever.
-  window.addEventListener('blur', () => pressed.clear());
+  window.addEventListener('blur', () => {
+    pressed.clear();
+    tapped.clear();
+  });
 }
 
 export default class KeyboardInputSystem {
@@ -72,12 +91,18 @@ export default class KeyboardInputSystem {
     for (const button of Object.values(InputButton)) {
       const state = userInput[button];
       const wasDown = state.down;
-      const isDown = KEY_BINDINGS[button].some((code) => pressed.has(code));
+      const isDown = KEY_BINDINGS[button].some(
+        (code) => pressed.has(code) || tapped.has(code),
+      );
 
       state.down = isDown;
       state.justDown = isDown && !wasDown;
       state.justUp = !isDown && wasDown;
     }
+
+    // Drained after every button has been sampled, so one tap is seen by all of
+    // them and by exactly one frame.
+    tapped.clear();
   }
 
   /**

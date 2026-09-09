@@ -34,6 +34,16 @@ export interface ShapeComponent {
   radius: number;
   /** line / triangle / polygon vertices, relative to the transform */
   points: Point[];
+  /**
+   * `points` changed since the last render.
+   *
+   * Vertex geometry is the one thing the renderer cannot sync cheaply: pushing
+   * it rebuilds the shape's bounding box and re-triangulates it. Static shapes
+   * would pay that every frame for nothing, so a system that rewrites `points`
+   * says so, exactly as `Text` does for `content`. Starts true so a shape built
+   * with points is uploaded on its first render.
+   */
+  dirty: boolean;
   /** 0xRRGGBB, or null for no fill */
   fillColor: number | null;
   fillAlpha: number;
@@ -56,6 +66,7 @@ export function Shape({
   height = 0,
   radius = 0,
   points = [],
+  dirty = true,
   fillColor = 0xffffff,
   fillAlpha = 1,
   strokeColor = null,
@@ -72,6 +83,7 @@ export function Shape({
     height,
     radius,
     points,
+    dirty,
     fillColor,
     fillAlpha,
     strokeColor,

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180">
+  <rect data-token="baseNight" fill="#06080c" fill-opacity="0.72" x="0" y="0" width="320" height="180" />
+  <rect data-token="obstacleWarning" fill="#ff5a1f" fill-opacity="0.9" x="0" y="0" width="320" height="3" />
+  <rect data-token="obstacleWarning" fill="#ff5a1f" fill-opacity="0.9" x="0" y="177" width="320" height="3" />
+  <g data-token="obstacleWarning" fill="#ff5a1f" fill-opacity="0.5">
+    <path d="M150,70 L170,70 L163,96 L157,96 Z" />
+    <circle cx="160" cy="108" r="5" />
+  </g>
+</svg>
