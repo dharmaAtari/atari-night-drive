@@ -1,0 +1,12 @@
+{
+  "display": {
+    "width": null,
+    "height": null,
+    "scaleMode": "",
+    "fullscreen": false
+  },
+  "performance": {
+    "targetFps": null
+  },
+  "audio": {}
+}
