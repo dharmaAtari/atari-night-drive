@@ -15,7 +15,7 @@ touch and keyboard) without duplicating game code.
 │   ├── systems/        # logic that operates on components each frame
 │   └── main.js         # Phaser bootstrap + game loop entry point
 ├── bin/
-│   ├── config.xml      # runtime settings (screen size, fps, sound mapping, ...)
+│   ├── config.json     # runtime settings (screen size, fps, sound mapping, ...)
 │   └── assets/
 │       ├── sounds/     # audio files (engine, ui, ambience)
 │       └── sprites/
@@ -54,12 +54,12 @@ adding one system, not touching gameplay code.
 
 The runtime/distributable side of the project — everything the game loads at run time.
 
-### `config.xml`
+### `config.json`
 Externalises settings so they can be changed without a rebuild:
 
 - **Display** — screen width/height, scale mode, fullscreen
 - **Performance** — target fps
-- **Audio mapping** — logical sound name → file, e.g. `enginesound: vroom.mp3`
+- **Audio mapping** — logical sound name → file, e.g. `"enginesound": "vroom.mp3"`
 - Any other tunable game settings
 
 Systems read values from this config rather than hardcoding them.
