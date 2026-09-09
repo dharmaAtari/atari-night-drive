@@ -8,5 +8,28 @@
   "performance": {
     "targetFps": null
   },
-  "audio": {}
+  "audio": {
+    "basePath": "assets/sounds/",
+    "master": {
+      "volume": 1.0,
+      "muted": false
+    },
+    "buses": {
+      "sfx":      { "volume": 1.0 },
+      "ambience": { "volume": 0.6 },
+      "ui":       { "volume": 0.8 }
+    },
+    "sounds": {
+      "engine.start":     { "file": "engine_start.mp3",     "bus": "sfx",      "loop": false, "volume": 1.0 },
+      "engine.loop":      { "file": "engine_loop.mp3",      "bus": "sfx",      "loop": true,  "volume": 0.8 },
+      "car.drift":        { "file": "drift.mp3",            "bus": "sfx",      "loop": false, "volume": 0.9 },
+      "car.crash":        { "file": "car_crash.mp3",        "bus": "sfx",      "loop": false, "volume": 1.0 },
+      "obstacle.hit":     { "file": "obstacle_hit.mp3",     "bus": "sfx",      "loop": false, "volume": 0.9 },
+      "rope.throw":       { "file": "rope_throw.mp3",       "bus": "sfx",      "loop": false, "volume": 0.8 },
+      "rope.release":     { "file": "rope_release.mp3",     "bus": "sfx",      "loop": false, "volume": 0.8 },
+      "checkpoint.chime": { "file": "checkpoint_chime.mp3", "bus": "ui",       "loop": false, "volume": 1.0 },
+      "ui.blip":          { "file": "ui_blip.mp3",          "bus": "ui",       "loop": false, "volume": 0.7 },
+      "ambience.wind":    { "file": "wind_loop.mp3",        "bus": "ambience", "loop": true,  "volume": 0.5 }
+    }
+  }
 }
