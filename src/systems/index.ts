@@ -13,6 +13,7 @@ export { default as HudViewSystem } from './HudViewSystem.js';
 export { default as AudioSystem } from './AudioSystem.js';
 
 export { progressionSystem, difficultyAt, speedAt, speedCap } from './ProgressionSystem.js';
+export { countdownSystem, countdownDigit } from './CountdownSystem.js';
 export { createTrackSystem } from './TrackSystem.js';
 export { anchorSystem, ropeRange, anchorWindow, openAnchors } from './AnchorSystem.js';
 export { ropeSystem, isRopeAttached, laneX, easeToward } from './RopeSystem.js';

@@ -97,6 +97,7 @@ function detach(world: World, anchor: Anchor | null): void {
   rope.timer = config.rope.returnDuration;
   rope.anchorId = null;
   if (anchor) anchor.state = AnchorState.PASSED;
+  world.events.push({ type: GameEvent.ROPE_RELEASED });
 }
 
 export function ropeSystem(world: World, held: boolean, pressed: boolean, dt: number): void {

@@ -57,7 +57,18 @@
   },
   "audio": {
     "volume": 1,
-    "sounds": {}
+    "sounds": {
+      "ui.blip":        "assets/sounds/ui_blip.mp3",
+      "engine.start":   "assets/sounds/engine_start.mp3",
+      "engine.loop":    "assets/sounds/engine_loop.mp3",
+      "wind.loop":      "assets/sounds/wind_loop.mp3",
+      "rope.throw":     "assets/sounds/rope_throw.mp3",
+      "rope.release":   "assets/sounds/rope_release.mp3",
+      "car.drift":      "assets/sounds/drift.mp3",
+      "crash.obstacle": "assets/sounds/obstacle_hit.mp3",
+      "crash.car":      "assets/sounds/car_crash.mp3",
+      "pickup.chime":   "assets/sounds/checkpoint_chime.mp3"
+    }
   },
   "lanes": {
     "count": 3,
@@ -130,6 +141,9 @@
     "drainPerMetre": 0.0004,
     "powerPickup": 0.35,
     "highBeamDrainPerSecond": 0.25
+  },
+  "start": {
+    "countdownSeconds": 3
   },
   "score": {
     "pointsPerSecond": 1

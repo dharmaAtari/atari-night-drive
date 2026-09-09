@@ -228,6 +228,8 @@ export interface Light {
 // --- the run --------------------------------------------------------------
 
 export const RunState = {
+  /** the 3-2-1 — road built and lit, engine turning over, nothing moving */
+  COUNTDOWN: 'countdown',
   RUNNING: 'running',
   /** the impact beat — shake, engine cut, no input accepted */
   CRASHING: 'crashing',
@@ -250,8 +252,16 @@ export const CrashCause = {
 export type CrashCauseValue = (typeof CrashCause)[keyof typeof CrashCause];
 
 export const GameEvent = {
+  /** the count began, on a fresh run or a restart — the engine turns over */
+  COUNTDOWN_STARTED: 'countdownStarted',
+  /** the digit changed; `count` is the new one */
+  COUNTDOWN_TICK: 'countdownTick',
+  /** go — the count ended and the car is moving */
+  RUN_STARTED: 'runStarted',
   ROPE_THROWN: 'ropeThrown',
   ROPE_ATTACHED: 'ropeAttached',
+  /** the rope let go, by choice or because its anchor fell out of the window */
+  ROPE_RELEASED: 'ropeReleased',
   ROPE_MISSED: 'ropeMissed',
   ROPE_SNAPPED: 'ropeSnapped',
   PICKUP_POWER: 'pickupPower',
@@ -270,6 +280,8 @@ export interface RunEvent {
   type: GameEventValue;
   anchorId?: AnchorId;
   cause?: CrashCauseValue;
+  /** the digit a countdown tick landed on */
+  count?: number;
 }
 
 export interface Run {
@@ -280,6 +292,8 @@ export interface Run {
   best: number;
   /** seconds left in the impact beat before the run reads as over */
   crashTimer: number;
+  /** seconds left in the 3-2-1 before the car moves */
+  countdown: number;
   /** the seed this run's hazards were generated from */
   seed: number;
 }
@@ -352,7 +366,14 @@ export function createWorld(config: GameConfig): World {
     hazards: [],
     rope: { state: RopeState.IDLE, anchorId: null, timer: 0, extent: 0, tension: 0 },
     light: { power: config.light.startPower, highBeam: 0, highBeamActive: false },
-    run: { state: RunState.RUNNING, elapsed: 0, best: 0, crashTimer: 0, seed: 0 },
+    run: {
+      state: config.start.countdownSeconds > 0 ? RunState.COUNTDOWN : RunState.RUNNING,
+      elapsed: 0,
+      best: 0,
+      crashTimer: 0,
+      countdown: config.start.countdownSeconds,
+      seed: 0,
+    },
     projection: {
       segments: [],
       count: 0,
@@ -362,7 +383,9 @@ export function createWorld(config: GameConfig): World {
       carScreenWidth: 0,
       carScreenHeight: 0,
     },
-    events: [],
+    // A run starts the moment the world exists, and the first frame should
+    // hear it the same way a restart does.
+    events: [{ type: startEvent(config) }],
     nextAnchorId: 1,
   };
 }
@@ -397,12 +420,20 @@ export function resetRun(world: World, seed: number): void {
   world.light.highBeam = 0;
   world.light.highBeamActive = false;
 
-  world.run.state = RunState.RUNNING;
+  world.run.state = config.start.countdownSeconds > 0 ? RunState.COUNTDOWN : RunState.RUNNING;
   world.run.elapsed = 0;
   world.run.crashTimer = 0;
+  world.run.countdown = config.start.countdownSeconds;
   world.run.seed = seed;
 
   world.nextAnchorId = 1;
+
+  world.events.push({ type: startEvent(config) });
+}
+
+/** A run opens with the count, unless the count is configured away. */
+function startEvent(config: GameConfig): GameEventValue {
+  return config.start.countdownSeconds > 0 ? GameEvent.COUNTDOWN_STARTED : GameEvent.RUN_STARTED;
 }
 
 /** The segment containing `s`, or null if it falls outside the live window. */

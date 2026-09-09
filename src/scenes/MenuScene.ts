@@ -15,6 +15,7 @@
  * the scene rather than the entity: entities stay data, and the scene is what
  * has the authority to change scenes.
  */
+import Phaser from 'phaser';
 import BaseScene from './BaseScene.js';
 import { SceneKey } from './keys.js';
 import type Entity from '../entities/Entity.js';
@@ -22,6 +23,7 @@ import menuOption from '../entities/menuOption.js';
 import selectionBox from '../entities/selectionBox.js';
 import titleMark from '../entities/titleMark.js';
 import { SPRITE, TRANSFORM, USER_INPUT } from '../components/index.js';
+import AudioSystem from '../systems/AudioSystem.js';
 
 /** Vertical gap between menu rows, in pixels. */
 const ROW_SPACING = 56;
@@ -38,6 +40,7 @@ export default class MenuScene extends BaseScene {
   private rows: MenuRow[] = [];
   private box!: Entity;
   private title!: Entity;
+  private audio!: AudioSystem;
 
   /** Index into `rows` of the highlighted option. */
   private selected = 0;
@@ -47,6 +50,9 @@ export default class MenuScene extends BaseScene {
   }
 
   protected override build(): void {
+    this.audio = new AudioSystem(this.sound, this.gameConfig.audio.volume);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.audio.dispose());
+
     this.title = this.addEntity(titleMark());
 
     // Positions are set by layout(), which also re-runs on resize.
@@ -107,14 +113,19 @@ export default class MenuScene extends BaseScene {
     // whole list past in three frames.
     if (input.up.justDown) {
       this.selected = (this.selected - 1 + count) % count;
+      this.audio.blip();
     }
     if (input.down.justDown) {
       this.selected = (this.selected + 1) % count;
+      this.audio.blip();
     }
 
     this.moveBoxToSelection();
 
     if (input.action.justDown) {
+      // The first press is also the gesture that lets audio start at all.
+      this.audio.unlock();
+      this.audio.blip();
       this.rows[this.selected]?.activate();
     }
   }
